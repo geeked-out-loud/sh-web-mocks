@@ -3,10 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Home() {
   const [isLogin, setIsLogin] = useState(true);
   const [showAuthCard, setShowAuthCard] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   return (
     <main className="min-h-screen">
@@ -92,24 +95,44 @@ export default function Home() {
                   <label htmlFor="password" className="block text-xs font-medium text-gray-800">Password</label>
                   {isLogin && <a href="#" className="text-xs font-medium text-[#1c2e4a] hover:underline">Forgot?</a>}
                 </div>
-                <input 
-                  type="password" 
-                  id="password" 
-                  className="w-full px-3 py-2.5 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500"
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    id="password" 
+                    className="w-full px-3 py-2.5 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500 pr-10"
+                    placeholder="••••••••"
+                  />
+                  <button 
+                    type="button" 
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
               
               {/* Confirm Password - only for signup */}
               {!isLogin && (
                 <div>
                   <label htmlFor="confirmPassword" className="block text-xs font-medium text-gray-800 mb-1">Confirm Password</label>
-                  <input 
-                    type="password" 
-                    id="confirmPassword" 
-                    className="w-full px-3 py-2.5 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500"
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <input 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      id="confirmPassword" 
+                      className="w-full px-3 py-2.5 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500 pr-10"
+                      placeholder="••••••••"
+                    />
+                    <button 
+                      type="button" 
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
               )}
               
@@ -266,24 +289,44 @@ export default function Home() {
                           <a href="#" className="text-xs font-medium text-[#1c2e4a] hover:underline">Forgot?</a>
                         )}
                       </div>
-                      <input 
-                        type="password" 
-                        id="desktop-password" 
-                        className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500"
-                        placeholder="••••••••"
-                      />
+                      <div className="relative">
+                        <input 
+                          type={showPassword ? "text" : "password"} 
+                          id="desktop-password" 
+                          className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500 pr-10"
+                          placeholder="••••••••"
+                        />
+                        <button 
+                          type="button" 
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
                     </div>
                     
                     {/* Confirm Password - only for signup */}
                     {!isLogin && (
                       <div>
                         <label htmlFor="desktop-confirmPassword" className="block text-sm font-medium text-gray-800 mb-1">Confirm Password</label>
-                        <input 
-                          type="password" 
-                          id="desktop-confirmPassword" 
-                          className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500"
-                          placeholder="••••••••"
-                        />
+                        <div className="relative">
+                          <input 
+                            type={showConfirmPassword ? "text" : "password"} 
+                            id="desktop-confirmPassword" 
+                            className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500 pr-10"
+                            placeholder="••••••••"
+                          />
+                          <button 
+                            type="button" 
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                          >
+                            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
                       </div>
                     )}
                     

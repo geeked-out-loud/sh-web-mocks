@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Scroller } from "./components/ui/scroller";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,10 +24,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth scrollbar-hide">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Scroller color="#0F387A" width={5} opacity={0.4} />
         {children}
       </body>
     </html>
