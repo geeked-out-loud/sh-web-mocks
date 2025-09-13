@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import { User, Search, Star, Briefcase, Mail, Download, Funnel, X, ChevronUp, ChevronDown } from "lucide-react";
+import { User, Briefcase, Mail, Download, Funnel, X, ChevronUp, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import Nav from "../components/Nav";    
 

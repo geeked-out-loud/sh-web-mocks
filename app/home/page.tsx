@@ -8,7 +8,23 @@ import Nav from '@/app/components/Nav';
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('postJob');
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedJob, setSelectedJob] = useState<any>(null);
+  type Job = {
+    id: number;
+    title: string;
+    company: string;
+    location: string;
+    logo: string;
+    logoType: string;
+    logoColor?: string;
+    match?: string;
+    reason?: string;
+    skills?: string[];
+    type?: string;
+    applications?: number;
+    hiredDate?: string;
+    candidate?: string;
+  };
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [jobDescription, setJobDescription] = useState('');
   const [jobRequirements, setJobRequirements] = useState('');
@@ -108,7 +124,7 @@ export default function HomePage() {
   };
   
   // Function to handle opening the job details modal
-  const openJobModal = (job: any) => {
+  const openJobModal = (job: Job) => {
     setSelectedJob(job);
     // Initialize editable content based on default values
     setEditableJobTitle(job.title);
@@ -143,11 +159,25 @@ export default function HomePage() {
   const saveChanges = () => {
     // Here you could update the job in your database
     // For now, we'll just update the selectedJob with edited values
-    setSelectedJob({
-      ...selectedJob,
-      title: editableJobTitle,
-      type: editableJobRole
-    });
+    if (selectedJob) {
+      setSelectedJob({
+        ...selectedJob,
+        title: editableJobTitle,
+        type: editableJobRole,
+        id: selectedJob.id,
+        company: selectedJob.company,
+        location: selectedJob.location,
+        logo: selectedJob.logo,
+        logoType: selectedJob.logoType,
+        logoColor: selectedJob.logoColor,
+        match: selectedJob.match,
+        reason: selectedJob.reason,
+        skills: selectedJob.skills,
+        applications: selectedJob.applications,
+        hiredDate: selectedJob.hiredDate,
+        candidate: selectedJob.candidate
+      });
+    }
     // Exit edit mode
     setIsEditMode(false);
   };
@@ -225,8 +255,8 @@ export default function HomePage() {
     // Combine all job information
     const jobDetails = `
 Job Title: ${editableJobTitle}
-Company: ${selectedJob.company}
-Location: ${selectedJob.location}
+Company: ${selectedJob ? selectedJob.company : ''}
+Location: ${selectedJob ? selectedJob.location : ''}
 Job Type: ${editableJobRole}
 
 Description:
@@ -260,7 +290,7 @@ ${applicationDeadline.day && applicationDeadline.month && applicationDeadline.ye
   };
   
   // Function to handle the new job form changes
-  const handleNewJobFormChange = (field: string, value: any) => {
+  const handleNewJobFormChange = (field: string, value: string) => {
     setNewJobForm(prev => {
       if (field.startsWith('deadline.')) {
         const deadlineField = field.split('.')[1];
