@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, User, Calendar, FileText, ChevronRight, CheckCheck, Sparkles, Bot, Trash, Download } from 'lucide-react';
 import Image from 'next/image';
 import Nav from '@/app/components/Nav';
+import { getRecruiterProfile, createRecruiterProfile, getJobs, createJob, getJobById, generateJobJD } from '@/lib/api';
+import { getAccessToken } from '@/config/auth';
 
 export default function HomePage() {
+  // Top-level component state (kept company onboarding out of this page)
   const [activeTab, setActiveTab] = useState('postJob');
   const [modalOpen, setModalOpen] = useState(false);
   type Job = {
@@ -26,6 +29,8 @@ export default function HomePage() {
   };
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isGeneratingJD, setIsGeneratingJD] = useState(false);
+  const [isGeneratingRequirements, setIsGeneratingRequirements] = useState(false);
   const [jobDescription, setJobDescription] = useState('');
   const [jobRequirements, setJobRequirements] = useState('');
   const [modalPage, setModalPage] = useState(1);
@@ -45,12 +50,12 @@ export default function HomePage() {
   const [isNewJobModalOpen, setIsNewJobModalOpen] = useState(false);
   const [newJobForm, setNewJobForm] = useState({
     title: '',
-    company: 'Your Company', // Default value
+    company: 'Your Company',
     location: '',
-    type: 'Full time', // Default value
+    type: 'Full time',
     description: '',
     requirements: '',
-    compensationType: 'salary', // salary or stipend
+    compensationType: 'salary',
     openings: '',
     payRangeFrom: '',
     payRangeTo: '',
@@ -62,98 +67,56 @@ export default function HomePage() {
   });
   const [newJobModalPage, setNewJobModalPage] = useState(1);
   const profileImage = '/image.png'; // Assuming you have this image in your public folder
-  
-  // Initial data for AI-suggested jobs
-  const initialSuggestedJobs = [
-    {
-      id: 1,
-      title: 'Senior UX Designer',
-      company: 'Your Company',
-      location: 'Bangalore',
-      logo: 'AI',
-      logoType: 'text',
-      logoColor: 'blue',
-      match: '98%',
-      reason: 'Based on your hiring history',
-      skills: ['Figma', 'User Research', 'Design Systems']
-    },
-    {
-      id: 2,
-      title: 'Full Stack Developer',
-      company: 'Your Company',
-      location: 'Remote',
-      logo: 'AI',
-      logoType: 'text',
-      logoColor: 'blue',
-      match: '95%',
-      reason: 'Trending in your industry',
-      skills: ['React', 'Node.js', 'GraphQL']
-    },
-    {
-      id: 3,
-      title: 'Product Manager',
-      company: 'Your Company',
-      location: 'Hybrid',
-      logo: 'AI',
-      logoType: 'text',
-      logoColor: 'blue',
-      match: '92%',
-      reason: 'Competitor hiring pattern',
-      skills: ['Agile', 'Data Analysis', 'User Stories']
-    },
-    {
-      id: 4,
-      title: 'Data Scientist',
-      company: 'Your Company',
-      location: 'Bangalore',
-      logo: 'AI',
-      logoType: 'text',
-      logoColor: 'blue',
-      match: '90%',
-      reason: 'Market demand analysis',
-      skills: ['Python', 'ML', 'Data Visualization']
-    }
-  ];
-  
-  // State to manage the AI-suggested jobs list
-  const [suggestedJobs, setSuggestedJobs] = useState(initialSuggestedJobs);
-  
-  // Function to handle deletion of a job card
-  const handleDeleteJob = (jobId: number) => {
-    setSuggestedJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
-  };
-  
-  // Function to handle opening the job details modal
-  const openJobModal = (job: Job) => {
-    setSelectedJob(job);
-    // Initialize editable content based on default values
-    setEditableJobTitle(job.title);
-    setEditableJobRole(job.type || 'Full-time');
-    setJobDescription('We are seeking a skilled and motivated Software Developer to join our dynamic team. The ideal candidate will be responsible for designing, coding, testing, and deploying');
-    setJobRequirements('Develop, test, and maintain software applications and systems.\nCollaborate with product managers, designers, and QA engineers to translate business requirements into technical solutions.');
-    setIsEditMode(false);
-    setModalOpen(true);
-    
-    // Reset scroll position when opening modal
-    setTimeout(() => {
-      const container = document.getElementById('modalScrollContainer');
-      if (container) {
-        container.scrollTop = 0;
-      }
-    }, 50);
-  };
-  
-  // Function to close the modal
-  const closeModal = () => {
-    setModalOpen(false);
-    setIsEditMode(false);
-    setModalPage(1); // Reset modal page
-  };
-  
+  const [recruiterProfile, setRecruiterProfile] = useState<any | null>(null);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
+
   // Function to toggle edit mode
   const toggleEditMode = () => {
     setIsEditMode(!isEditMode);
   };
+
+  // Load recruiter profile on mount
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await getRecruiterProfile();
+        if (mounted) setRecruiterProfile(data);
+      } catch (e) {
+        // silently ignore for now; could show toast or fallback
+        // console.error('Failed to load recruiter profile', e);
+      }
+    })();
+    (async () => {
+      setJobsLoading(true);
+      try {
+        const res = await getJobs({ page: 1, page_size: 50 });
+        if (mounted && res && Array.isArray(res.jobs)) {
+          // Normalize upstream job fields to the shape the UI expects
+          const normalized = res.jobs.map((j: any) => ({
+            ...j,
+            // prefer existing UI-friendly names, fall back to API names
+            type: j.type ?? j.job_type ?? j.jobType ?? undefined,
+            hiredDate: j.hiredDate ?? j.hired_date ?? undefined,
+            // ensure status is a lowercase string for comparisons
+            status: j.status ? String(j.status).toLowerCase() : undefined,
+            // applications fallback
+            applications: j.applications ?? j.no_of_applications ?? j.no_of_openings ?? 0,
+            // logo heuristics: if upstream provides no logo, use company initial
+            logo: j.logo ?? (j.company ? String(j.company).charAt(0) : ''),
+            logoType: j.logoType ?? (j.logo && typeof j.logo === 'string' && j.logo.startsWith('http') ? 'image' : 'text')
+          }));
+          setJobs(normalized);
+        }
+      } catch (e) {
+        // ignore - keep sample data
+      } finally {
+        setJobsLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
   
   // Function to save changes
   const saveChanges = () => {
@@ -180,6 +143,53 @@ export default function HomePage() {
     }
     // Exit edit mode
     setIsEditMode(false);
+  };
+
+  // Placeholder generator handlers (can be wired to an AI service later)
+  // Combined generate action: run both generators concurrently
+  const generateAll = async () => {
+    console.log('Generate (combined) clicked');
+    setIsGeneratingJD(true);
+    setIsGeneratingRequirements(true);
+    try {
+      if (selectedJob && selectedJob.id) {
+        // Call the generate JD endpoint
+        try {
+          const res: any = await generateJobJD(selectedJob.id);
+          const desc = res?.description ?? res?.data?.description ?? '';
+          const reqs = res?.requirements ?? res?.data?.requirements ?? [];
+          if (desc) setJobDescription(desc);
+          if (Array.isArray(reqs) && reqs.length) setJobRequirements(reqs.join('\n'));
+        } catch (e) {
+          // fallback to simulation if API call fails
+          await Promise.all([
+            new Promise((res) => setTimeout(res, 800)),
+            new Promise((res) => setTimeout(res, 900))
+          ]);
+          if (!jobDescription || !jobDescription.trim()) {
+            setJobDescription('Generated job description (placeholder). Edit as needed.');
+          }
+          if (!jobRequirements || !jobRequirements.trim()) {
+            setJobRequirements('• Requirement 1\n• Requirement 2\n• Requirement 3');
+          }
+        }
+      } else {
+        // No selected job, simulate generation
+        await Promise.all([
+          new Promise((res) => setTimeout(res, 800)),
+          new Promise((res) => setTimeout(res, 900))
+        ]);
+        if (!jobDescription || !jobDescription.trim()) {
+          setJobDescription('Generated job description (placeholder). Edit as needed.');
+        }
+        if (!jobRequirements || !jobRequirements.trim()) {
+          setJobRequirements('• Requirement 1\n• Requirement 2\n• Requirement 3');
+        }
+      }
+    } finally {
+      setIsGeneratingJD(false);
+      setIsGeneratingRequirements(false);
+    }
   };
   
   // Function to go to the next page of the modal
@@ -223,11 +233,22 @@ export default function HomePage() {
     // Format day to ensure it's two digits
     const formattedDay = applicationDeadline.day ? 
       applicationDeadline.day.padStart(2, '0') : '';
-    
-    // Create a formatted date from the applicationDeadline components
-    const formattedDeadline = applicationDeadline.year && applicationDeadline.month && formattedDay
-      ? `${applicationDeadline.year}-${applicationDeadline.month}-${formattedDay}`
-      : '';
+
+    // Create a validated ISO timestamp (end of day) for the deadline so upstream can parse it
+    let formattedDeadline = '';
+    if (applicationDeadline.year && applicationDeadline.month && formattedDay) {
+      const y = Number(applicationDeadline.year);
+      const m = Number(applicationDeadline.month);
+      const d = Number(formattedDay);
+      const dt = new Date(y, m - 1, d, 23, 59, 59);
+      // Validate that the constructed date matches the inputs (catches invalid dates like Feb 30)
+      if (dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d) {
+        formattedDeadline = dt.toISOString();
+      } else {
+        alert('Please enter a valid application deadline');
+        return;
+      }
+    }
     
     // Here you would handle job posting logic
     console.log('Job Posted:', {
@@ -245,8 +266,6 @@ export default function HomePage() {
     
     // Show a success message (you could use a toast notification here)
     alert('Job posted successfully!');
-    
-    // Close the modal and reset the form
     closeModal();
   };
   
@@ -347,7 +366,9 @@ ${applicationDeadline.day && applicationDeadline.month && applicationDeadline.ye
       alert('Please enter the number of openings');
       return;
     }
-    if (!newJobForm.payRangeFrom || !newJobForm.payRangeTo) {
+    // Determine if compensation ranges are required based on compensation selection
+    const compAvailable = newJobForm.compensationType !== 'no';
+    if (compAvailable && (!newJobForm.payRangeFrom || !newJobForm.payRangeTo)) {
       alert('Please enter the pay range');
       return;
     }
@@ -356,20 +377,92 @@ ${applicationDeadline.day && applicationDeadline.month && applicationDeadline.ye
       return;
     }
     
-    // Format deadline
-    const formattedDeadline = `${newJobForm.deadline.year}-${newJobForm.deadline.month}-${newJobForm.deadline.day.padStart(2, '0')}`;
+    // Build a validated ISO timestamp for the deadline (end of day)
+    let formattedDeadline = '';
+    try {
+      const y = Number(newJobForm.deadline.year);
+      const m = Number(newJobForm.deadline.month);
+      const d = Number(newJobForm.deadline.day.padStart(2, '0'));
+      const dt = new Date(y, m - 1, d, 23, 59, 59);
+      if (dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d) {
+        formattedDeadline = dt.toISOString();
+      } else {
+        alert('Please enter a valid application deadline');
+        return;
+      }
+    } catch (e) {
+      alert('Please enter a valid application deadline');
+      return;
+    }
     
-    // Here you would handle job posting logic
-    console.log('New Job Posted:', {
-      ...newJobForm,
-      deadline: formattedDeadline
-    });
-    
-    // Show success message
-    alert('New job posted successfully!');
-    
-    // Close the modal
-    setIsNewJobModalOpen(false);
+    // Build payload according to API contract
+    const payKind = (newJobForm.type === 'Part time' || newJobForm.type === 'Internship') ? 'stipend' : 'salary';
+
+    const stipendFlag = payKind === 'stipend';
+
+    const payload: any = {
+      title: newJobForm.title,
+      company: newJobForm.company,
+      location: newJobForm.location,
+      description: newJobForm.description,
+      requirements: Array.isArray(newJobForm.requirements) ? newJobForm.requirements : typeof newJobForm.requirements === 'string' ? newJobForm.requirements.split('\n') : newJobForm.requirements,
+      stipend: stipendFlag && compAvailable ? true : false,
+      stipend_min: null,
+      stipend_max: null,
+      salary_min: null,
+      salary_max: null,
+      post_on: [],
+      job_type: String(newJobForm.type).toLowerCase().replace(/\s+/g, '-'),
+      experience: '',
+      skills: [],
+      deadline: formattedDeadline,
+      no_of_openings: parseInt(newJobForm.openings || '0', 10)
+    };
+
+    if (compAvailable) {
+      const from = Number(newJobForm.payRangeFrom) || null;
+      const to = Number(newJobForm.payRangeTo) || null;
+      if (payKind === 'stipend') {
+        payload.stipend_min = from;
+        payload.stipend_max = to;
+      } else {
+        payload.salary_min = from;
+        payload.salary_max = to;
+      }
+    }
+
+    // POST to the create-job API (server proxy will forward to API_BASE)
+    (async () => {
+      try {
+        const body = await createJob(payload).catch((err) => {
+          console.error('Failed to create job', err);
+          throw err;
+        });
+
+  // Success - refresh jobs list and close modal
+        try {
+          const updated = await getJobs({ page: 1, page_size: 50 });
+          if (updated && Array.isArray(updated.jobs)) setJobs(updated.jobs.map((j: any) => ({
+            ...j,
+            type: j.type ?? j.job_type ?? j.jobType ?? undefined,
+            hiredDate: j.hiredDate ?? j.hired_date ?? undefined,
+            status: j.status ? String(j.status).toLowerCase() : undefined,
+            applications: j.applications ?? j.no_of_applications ?? j.no_of_openings ?? 0,
+            logo: j.logo ?? (j.company ? String(j.company).charAt(0) : ''),
+            logoType: j.logoType ?? (j.logo && typeof j.logo === 'string' && j.logo.startsWith('http') ? 'image' : 'text')
+          })));
+        } catch (e) {
+          // ignore refresh error
+        }
+
+        alert('New job posted successfully!');
+        setIsNewJobModalOpen(false);
+        setNewJobModalPage(1);
+      } catch (err) {
+        console.error('Error posting new job', err);
+        alert('Error posting new job');
+      }
+    })();
   };
   
   // Function to download job JD as a text file
@@ -417,89 +510,96 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
   };
   
   // Sample data for different tabs
-  const recentOpenings = [
-    {
-      id: 1,
-      title: 'UI Developer',
-      company: 'Manusmriti',
-      location: 'Bangalore',
-      logo: 'MS',
-      logoType: 'text',
-      logoColor: 'teal',
-      type: 'Full time',
-      applications: 250
-    },
-    {
-      id: 2,
-      title: 'Front End Developer',
-      company: 'Google Maps',
-      location: 'Bangalore',
-      logo: '/globe.svg',
-      logoType: 'image',
-      type: 'Full time',
-      applications: 250
-    },
-    {
-      id: 3,
-      title: 'Front End Developer',
-      company: 'Amazon',
-      location: 'Bangalore',
-      logo: '/file.svg',
-      logoType: 'image',
-      type: 'Full time',
-      applications: 250
-    },
-    {
-      id: 4,
-      title: 'Front End Developer',
-      company: 'Amazon',
-      location: 'Bangalore',
-      logo: '/file.svg',
-      logoType: 'image',
-      type: 'Internship',
-      applications: 250
-    }
-  ];
+  // If API provides jobs use them; otherwise fall back to static sample data below
+  // Use only API-provided jobs. recentOpenings = jobs with future deadlines or no deadline and not draft.
+  const now = new Date();
+  const recentOpenings = jobs.filter((j) => {
+    if (j.status && String(j.status).toLowerCase() === 'draft') return false;
+    if (!j.deadline) return true;
+    const d = new Date(j.deadline);
+    return d >= now;
+  });
+
+  // completedHires = jobs that are filled or have passed their deadline or have a hired date
+  const completedHires = jobs.filter((j) => {
+    if (j.status && String(j.status).toLowerCase() === 'filled') return true;
+    if (j.hired_date || j.hiredDate) return true;
+    if (!j.deadline) return false;
+    const d = new Date(j.deadline);
+    return d < now;
+  });
   
-  const completedHires = [
-    {
-      id: 5,
-      title: 'UX Designer',
-      company: 'Microsoft',
-      location: 'Hyderabad',
-      logo: 'MS',
-      logoType: 'text',
-      logoColor: 'blue',
-      type: 'Full time',
-      hiredDate: '15 Aug 2025',
-      candidate: 'Alex Johnson'
-    },
-    {
-      id: 6,
-      title: 'Product Manager',
-      company: 'Adobe',
-      location: 'Bangalore',
-      logo: 'AD',
-      logoType: 'text',
-      logoColor: 'red',
-      type: 'Full time',
-      hiredDate: '10 Aug 2025',
-      candidate: 'Sarah Miller'
-    },
-    {
-      id: 7,
-      title: 'Backend Developer',
-      company: 'Flipkart',
-      location: 'Bangalore',
-      logo: 'FK',
-      logoType: 'text',
-      logoColor: 'yellow',
-      type: 'Contract',
-      hiredDate: '5 Aug 2025',
-      candidate: 'Rahul Sharma'
-    }
-  ];
-  
+  // Sample AI suggested jobs (stateful so we can delete/modify)
+  const [suggestedJobs, setSuggestedJobs] = useState<Job[]>([]);
+
+  // Draft jobs (status === 'draft')
+  const drafts = jobs.filter((j) => String(j.status).toLowerCase() === 'draft');
+
+  // Hoisted helper functions so they can be used by earlier functions too
+  function openJobModal(job: Job) {
+    // Fetch full job details from the API and populate modal fields
+    (async () => {
+      try {
+        const body: any = await getJobById(job.id).catch(() => null);
+        const jobObj = body?.job ?? body ?? job;
+
+        setSelectedJob(jobObj);
+        setEditableJobTitle(jobObj.title ?? job.title);
+        // Normalize job type to UI label
+        const typeLabel = jobObj.job_type ? (jobObj.job_type === 'part-time' ? 'Part time' : jobObj.job_type === 'internship' ? 'Internship' : 'Full time') : (jobObj.type || 'Full time');
+        setEditableJobRole(typeLabel);
+
+        // Populate modal fields
+        setJobDescription(typeof jobObj.description === 'string' ? jobObj.description : (jobObj.description ?? ''));
+        if (Array.isArray(jobObj.requirements)) {
+          setJobRequirements(jobObj.requirements.join('\n'));
+        } else {
+          setJobRequirements(jobObj.requirements ?? '');
+        }
+        setOpenings(jobObj.no_of_openings ? String(jobObj.no_of_openings) : '');
+        // Salary/stipend ranges
+        setPayRangeFrom(jobObj.stipend_min != null ? String(jobObj.stipend_min) : jobObj.salary_min != null ? String(jobObj.salary_min) : '');
+        setPayRangeTo(jobObj.stipend_max != null ? String(jobObj.stipend_max) : jobObj.salary_max != null ? String(jobObj.salary_max) : '');
+
+        // Deadline parsing: fill applicationDeadline fields if present
+        if (jobObj.deadline) {
+          try {
+            const d = new Date(jobObj.deadline);
+            setApplicationDeadline({
+              month: String(d.getMonth() + 1).padStart(2, '0'),
+              day: String(d.getDate()).padStart(2, '0'),
+              year: String(d.getFullYear())
+            });
+          } catch (e) {
+            // ignore
+          }
+        } else {
+          setApplicationDeadline({ month: '', day: '', year: '' });
+        }
+
+      } catch (e) {
+        // Fallback to basic job info
+        setSelectedJob(job);
+        setEditableJobTitle(job.title);
+        setEditableJobRole(job.type || 'Full time');
+      } finally {
+        setModalOpen(true);
+        setModalPage(1);
+      }
+    })();
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+    setSelectedJob(null);
+    setIsEditMode(false);
+    setModalPage(1);
+  }
+
+  function handleDeleteJob(id: number) {
+    setSuggestedJobs(prev => prev.filter(j => j.id !== id));
+  }
+
   // No longer need handleSearch as it's moved to the Nav component
   
   return (
@@ -509,6 +609,7 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
         {/* Top Section Container */}
         <div className='bg-gradient-to-br from-[#0F387A]/25 to-[#126F7D]/25 rounded-b-4xl'>
         <Nav />
+          {/* Company onboarding moved to landing page; removed modal from this home view. */}
           {/* Welcome section */}
           <div className="px-6 pt-10 flex items-center justify-start">
             <div className="flex items-center">
@@ -520,7 +621,9 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                   className="object-cover"
                 />
               </div>
-              <p className="text-2xl font-medium text-[#1c2e4a]">Welcome Back, Recruiter</p>
+              <div>
+                <p className="text-2xl font-medium text-[#1c2e4a]">{"Welcome Back, " + (recruiterProfile?.profile?.full_name ?? 'Recruiter')}</p>
+              </div>
             </div>
           </div>
         
@@ -587,6 +690,16 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                   Recent Openings
                 </button>
                 <button 
+                  onClick={() => setActiveTab('drafts')} 
+                  className={`flex-shrink-0 px-4 sm:px-5 md:px-6 py-2 sm:py-2 md:py-2.5 text-sm sm:text-sm md:text-md font-medium rounded-full transition-all ${
+                    activeTab === 'drafts' 
+                      ? 'bg-[#0F387A] text-white' 
+                      : 'bg-[#0F387A]/6 text-[#0F387A] hover:bg-[#0F387A]/10'
+                  }`}
+                >
+                  Drafts
+                </button>
+                <button 
                   onClick={() => setActiveTab('completed')} 
                   className={`flex-shrink-0 px-4 sm:px-5 md:px-6 py-2 sm:py-2 md:py-2.5 text-sm sm:text-sm md:text-md font-medium rounded-full transition-all ${
                     activeTab === 'completed' 
@@ -609,7 +722,7 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                     <Bot className="h-5 w-5 text-[#0F387A]" />
                   </div>
                 </div>              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {suggestedJobs.map(job => (
+                {(suggestedJobs.length ? suggestedJobs : recentOpenings.slice(0, 6)).map(job => (
                   <div key={job.id} className="bg-white rounded-lg shadow-sm p-4 relative transition-all border border-dashed border-[#0F387A]/20 animate-fadeIn">
                     <div className="absolute top-3 right-3">
                       <div className="flex items-center bg-[#0F387A]/10 rounded-full px-2 py-0.5">
@@ -629,7 +742,7 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                     </div>
                     
                     <div className="flex items-center justify-between mt-3">
-                      <span className="bg-gray-100 text-gray-800 text-xs px-2.5 py-0.5 rounded-full">Full time</span>
+                      <span className="bg-gray-100 text-gray-800 text-xs px-2.5 py-0.5 rounded-full">{job.type ?? 'Full time'}</span>
                       <div className="flex items-center space-x-1.5">
                         <button 
                           onClick={() => openJobModal(job)}
@@ -732,6 +845,60 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'drafts' && (
+            <div className="px-6 py-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-[#1c2e4a]">Drafts</h2>
+                <button className="bg-gray-100 text-gray-600 rounded-full p-2 hover:bg-gray-200 transition">
+                  <Plus className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {drafts.length === 0 ? (
+                  <div className="col-span-full text-center text-gray-500">No drafts</div>
+                ) : (
+                  drafts.map(job => (
+                    <div key={job.id} className="bg-white rounded-lg shadow-sm p-4 relative transition-all hover:shadow-md cursor-pointer" onClick={() => openJobModal(job)}>
+                      <div className="absolute top-3 right-3">
+                        <ChevronRight className="h-4 w-4 text-gray-500" />
+                      </div>
+
+                      <div className="flex items-center mb-3">
+                        {job.logoType === 'text' ? (
+                          <div className={`w-10 h-10 rounded-md ${job.logoColor === 'teal' ? 'bg-teal-100' : 'bg-blue-100'} flex items-center justify-center mr-3`}>
+                            <span className={`text-xs font-bold ${job.logoColor === 'teal' ? 'text-teal-600' : 'text-blue-600'}`}>{job.logo}</span>
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-md overflow-hidden mr-3 bg-white flex items-center justify-center border border-gray-100">
+                            <Image 
+                              src={job.logo} 
+                              alt={job.company} 
+                              width={24} 
+                              height={24} 
+                              className="object-contain"
+                            />
+                          </div>
+                        )}
+                        <div className="flex-grow">
+                          <h3 className="font-medium text-[#1c2e4a]">{job.title}</h3>
+                          <p className="text-xs text-gray-500">{job.company} · {job.location}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="bg-gray-100 text-gray-800 text-xs px-2.5 py-0.5 rounded-full">{job.type}</span>
+                        <div className="flex items-center text-xs text-gray-500">
+                          <User className="h-3 w-3 mr-1" />
+                          <span>{job.applications} applications</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -1041,12 +1208,23 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                   <div></div> {/* Empty div for spacing */}
                   <div className="flex items-center space-x-3">
                     {isEditMode ? (
-                      <button 
-                        onClick={saveChanges}
-                        className="px-5 py-2.5 border border-[#0F387A] text-[#0F387A] rounded-full hover:bg-[#0F387A]/5 transition-all flex items-center"
-                      >
-                        Save Changes
-                      </button>
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={generateAll}
+                            className={`px-4 py-2 bg-[#0F387A] text-white rounded-full hover:bg-[#0F387A]/90 transition-all flex items-center ${(isGeneratingJD || isGeneratingRequirements) ? 'opacity-60 cursor-wait' : ''}`}
+                            disabled={isGeneratingJD || isGeneratingRequirements}
+                          >
+                            {(isGeneratingJD || isGeneratingRequirements) ? 'Generating…' : 'Generate'}
+                          </button>
+                        </div>
+                        <button 
+                          onClick={saveChanges}
+                          className="px-5 py-2.5 border border-[#0F387A] text-[#0F387A] rounded-full hover:bg-[#0F387A]/5 transition-all flex items-center"
+                        >
+                          Save Changes
+                        </button>
+                      </>
                     ) : (
                       <button 
                         onClick={toggleEditMode}
@@ -1302,18 +1480,20 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                       <div className="flex items-center space-x-2">
                         <input
                           type="number"
-                          className="w-full p-2 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
+                          className={`w-full p-2 rounded-lg text-sm transition-all duration-300 ${newJobForm.compensationType === 'no' ? 'bg-gray-100 border border-gray-200 text-gray-400' : 'bg-[#0F387A]/5 border border-[#0F387A]/20 text-gray-600 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30'}`}
                           placeholder="From"
                           value={newJobForm.payRangeFrom}
                           onChange={(e) => handleNewJobFormChange('payRangeFrom', e.target.value)}
+                          disabled={newJobForm.compensationType === 'no'}
                         />
                         <span className="text-gray-500">to</span>
                         <input
                           type="number"
-                          className="w-full p-2 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
+                          className={`w-full p-2 rounded-lg text-sm transition-all duration-300 ${newJobForm.compensationType === 'no' ? 'bg-gray-100 border border-gray-200 text-gray-400' : 'bg-[#0F387A]/5 border border-[#0F387A]/20 text-gray-600 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30'}`}
                           placeholder="To"
                           value={newJobForm.payRangeTo}
                           onChange={(e) => handleNewJobFormChange('payRangeTo', e.target.value)}
+                          disabled={newJobForm.compensationType === 'no'}
                         />
                       </div>
                     </div>

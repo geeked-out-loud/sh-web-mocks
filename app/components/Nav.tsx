@@ -1,12 +1,15 @@
-'use client';
+ 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, User, Menu, X } from 'lucide-react';
+import { getAuth, signOut } from 'firebase/auth';
+import { setAccessToken } from '../../config/auth';
 
 export default function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
@@ -146,7 +149,25 @@ export default function Nav() {
                     <button className={drawerBtn} onClick={() => setDesktopMenuOpen(false)}>My Plans</button>
                     <button className={drawerBtn} onClick={() => setDesktopMenuOpen(false)}>Help Centre</button>
                     <button className={drawerBtn} onClick={() => setDesktopMenuOpen(false)}>Switch Accounts</button>
-                    <button className={drawerBtn + " text-red-600 hover:bg-red-50"} onClick={() => setDesktopMenuOpen(false)}>Logout</button>
+                    <button
+                      className={drawerBtn + " text-red-600 hover:bg-red-50"}
+                      onClick={async () => {
+                        setDesktopMenuOpen(false);
+                        // Clear frontend tokens
+                        try {
+                          setAccessToken(null);
+                          const auth = typeof window !== 'undefined' ? getAuth() : null;
+                          if (auth) await signOut(auth);
+                        } catch (e) {
+                          // ignore sign out errors but log for debug
+                          // eslint-disable-next-line no-console
+                          console.error('Logout error', e);
+                        }
+                        router.push('/');
+                      }}
+                    >
+                      Logout
+                    </button>
                 </div>
                 </div>
             )}
@@ -179,7 +200,23 @@ export default function Nav() {
               <button className={drawerBtn} onClick={() => setMobileMenuOpen(false)}>My Plans</button>
               <button className={drawerBtn} onClick={() => setMobileMenuOpen(false)}>Help Centre</button>
               <button className={drawerBtn} onClick={() => setMobileMenuOpen(false)}>Switch Accounts</button>
-              <button className={drawerBtn + " text-red-600 hover:bg-red-50"} onClick={() => setMobileMenuOpen(false)}>Logout</button>
+              <button
+                className={drawerBtn + " text-red-600 hover:bg-red-50"}
+                onClick={async () => {
+                  setMobileMenuOpen(false);
+                  try {
+                    setAccessToken(null);
+                    const auth = typeof window !== 'undefined' ? getAuth() : null;
+                    if (auth) await signOut(auth);
+                  } catch (e) {
+                    // eslint-disable-next-line no-console
+                    console.error('Logout error', e);
+                  }
+                  router.push('/');
+                }}
+              >
+                Logout
+              </button>
             </div>
           </div>
         )}
