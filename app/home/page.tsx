@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, User, Calendar, FileText, ChevronRight, CheckCheck, Sparkles, Bot, Trash, Download } from 'lucide-react';
 import Image from 'next/image';
 import Nav from '@/app/components/Nav';
-import { getRecruiterProfile, createRecruiterProfile, getJobs, createJob, getJobById, generateJobJD } from '@/lib/api';
+import { getRecruiterProfile, createRecruiterProfile, getJobs, createJob, getJobById, generateJobJD, updateJob } from '@/lib/api';
 import { getAccessToken } from '@/config/auth';
 
 export default function HomePage() {
@@ -118,15 +118,14 @@ export default function HomePage() {
     return () => { mounted = false; };
   }, []);
   
-  // Function to save changes
+  // Function to save changes (local-only; API is triggered via the Post/Update button)
   const saveChanges = () => {
-    // Here you could update the job in your database
-    // For now, we'll just update the selectedJob with edited values
     if (selectedJob) {
       setSelectedJob({
         ...selectedJob,
         title: editableJobTitle,
         type: editableJobRole,
+        // keep other properties intact
         id: selectedJob.id,
         company: selectedJob.company,
         location: selectedJob.location,
@@ -141,6 +140,7 @@ export default function HomePage() {
         candidate: selectedJob.candidate
       });
     }
+
     // Exit edit mode
     setIsEditMode(false);
   };
@@ -217,22 +217,21 @@ export default function HomePage() {
     }, 50);
   };
   
-  // Function to post job
-  const postJob = () => {
+  // Function to post job (calls API)
+  const postJob = async () => {
     // Validate day and year inputs
     if (applicationDeadline.day && (parseInt(applicationDeadline.day) < 1 || parseInt(applicationDeadline.day) > 31)) {
       alert('Please enter a valid day (1-31)');
       return;
     }
-    
+
     if (applicationDeadline.year && applicationDeadline.year.length !== 4) {
       alert('Please enter a valid 4-digit year');
       return;
     }
-    
+
     // Format day to ensure it's two digits
-    const formattedDay = applicationDeadline.day ? 
-      applicationDeadline.day.padStart(2, '0') : '';
+    const formattedDay = applicationDeadline.day ? applicationDeadline.day.padStart(2, '0') : '';
 
     // Create a validated ISO timestamp (end of day) for the deadline so upstream can parse it
     let formattedDeadline = '';
@@ -249,24 +248,107 @@ export default function HomePage() {
         return;
       }
     }
-    
-    // Here you would handle job posting logic
-    console.log('Job Posted:', {
-      job: selectedJob,
-      description: jobDescription,
-      requirements: jobRequirements,
-      stipend,
-      openings: openings ? parseInt(openings, 10) : 0,
-      payRange: { 
-        from: payRangeFrom ? parseInt(payRangeFrom, 10) : 0, 
-        to: payRangeTo ? parseInt(payRangeTo, 10) : 0 
-      },
-      applicationDeadline: formattedDeadline
-    });
-    
-    // Show a success message (you could use a toast notification here)
-    alert('Job posted successfully!');
-    closeModal();
+
+    // Build payload similarly to postNewJob but using the edited modal fields
+    try {
+      const payKind = (String(editableJobRole || '').toLowerCase().includes('part') || String(editableJobRole || '').toLowerCase().includes('intern')) ? 'stipend' : 'salary';
+      const stipendFlag = stipend === 'yes' || payKind === 'stipend';
+
+      const requirementsArr = typeof jobRequirements === 'string'
+        ? jobRequirements.split('\n').map(r => r.trim()).filter(Boolean)
+        : Array.isArray(jobRequirements) ? jobRequirements : [];
+
+      const payload: any = {
+        title: editableJobTitle || (selectedJob?.title ?? ''),
+        company: selectedJob?.company ?? 'Your Company',
+        location: selectedJob?.location ?? '',
+        description: jobDescription || '',
+        requirements: requirementsArr,
+        stipend: stipendFlag,
+        stipend_min: null,
+        stipend_max: null,
+        salary_min: null,
+        salary_max: null,
+        post_on: [],
+        job_type: String(editableJobRole || 'Full time').toLowerCase().replace(/\s+/g, '-'),
+        experience: '',
+        skills: [],
+        deadline: formattedDeadline,
+        no_of_openings: openings ? parseInt(openings, 10) : 0
+      };
+
+      const from = payRangeFrom ? Number(payRangeFrom) : null;
+      const to = payRangeTo ? Number(payRangeTo) : null;
+      if (payKind === 'stipend') {
+        payload.stipend_min = from;
+        payload.stipend_max = to;
+      } else {
+        payload.salary_min = from;
+        payload.salary_max = to;
+      }
+
+      // If editing an existing job, PATCH; otherwise POST to create
+      if (selectedJob && selectedJob.id) {
+        try {
+          // For updates we only send description and requirements per spec
+          const updatePayload: any = {
+            description: jobDescription || '',
+            requirements: requirementsArr
+          };
+          await updateJob(selectedJob.id, updatePayload);
+          // Refresh jobs list
+          try {
+            const updated = await getJobs({ page: 1, page_size: 50 });
+            if (updated && Array.isArray(updated.jobs)) {
+              const normalized = updated.jobs.map((j: any) => ({
+                ...j,
+                type: j.type ?? j.job_type ?? j.jobType ?? undefined,
+                hiredDate: j.hiredDate ?? j.hired_date ?? undefined,
+                status: j.status ? String(j.status).toLowerCase() : undefined,
+                applications: j.applications ?? j.no_of_applications ?? j.no_of_openings ?? 0,
+                logo: j.logo ?? (j.company ? String(j.company).charAt(0) : ''),
+                logoType: j.logoType ?? (j.logo && typeof j.logo === 'string' && j.logo.startsWith('http') ? 'image' : 'text')
+              }));
+              setJobs(normalized);
+            }
+          } catch (e) {
+            // ignore refresh error
+          }
+
+          alert('Job updated successfully!');
+          closeModal();
+        } catch (err) {
+          console.error('Error updating job', err);
+          alert('Error updating job');
+        }
+      } else {
+        // Create new job
+        const created = await createJob(payload);
+        try {
+          const updated = await getJobs({ page: 1, page_size: 50 });
+          if (updated && Array.isArray(updated.jobs)) {
+            const normalized = updated.jobs.map((j: any) => ({
+              ...j,
+              type: j.type ?? j.job_type ?? j.jobType ?? undefined,
+              hiredDate: j.hiredDate ?? j.hired_date ?? undefined,
+              status: j.status ? String(j.status).toLowerCase() : undefined,
+              applications: j.applications ?? j.no_of_applications ?? j.no_of_openings ?? 0,
+              logo: j.logo ?? (j.company ? String(j.company).charAt(0) : ''),
+              logoType: j.logoType ?? (j.logo && typeof j.logo === 'string' && j.logo.startsWith('http') ? 'image' : 'text')
+            }));
+            setJobs(normalized);
+          }
+        } catch (e) {
+          // Ignore refresh error
+        }
+
+        alert('Job posted successfully!');
+        closeModal();
+      }
+    } catch (err) {
+      console.error('Error posting job', err);
+      alert('Error posting job');
+    }
   };
   
   // Function to download job details as a text file from the AI modal
@@ -1255,7 +1337,7 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                       onClick={postJob}
                       className="px-6 py-2.5 bg-[#0F387A] text-white rounded-full hover:bg-[#0F387A]/90 transition-all flex items-center"
                     >
-                      Post Job
+                      {selectedJob && selectedJob.id ? 'Update Job' : 'Post Job'}
                     </button>
                     <button
                       onClick={downloadJobDetails}

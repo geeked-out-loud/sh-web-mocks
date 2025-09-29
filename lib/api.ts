@@ -1,4 +1,5 @@
 import client from './api-client';
+import { getAccessToken } from '@/config/auth';
 
 export type RecruiterProfile = {
   user_id: string;
@@ -43,6 +44,35 @@ export async function generateJobJD(id: string | number) {
 }
 
 export async function updateJob(id: string | number, payload: Record<string, any>) {
+  // If running in the browser, call the local Next.js proxy route to avoid CORS
+  if (typeof window !== 'undefined') {
+    // same-origin proxy
+    const headers: Record<string,string> = { 'content-type': 'application/json', accept: 'application/json' };
+    const token = getAccessToken();
+    if (token) headers.authorization = `Bearer ${token}`;
+
+    const res = await fetch(`/api/v1/jobs/${id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    try {
+      const json = JSON.parse(text);
+      if (!res.ok) {
+        const err: any = new Error('API PATCH request failed');
+        err.status = res.status;
+        err.body = json;
+        throw err;
+      }
+      return json;
+    } catch (_) {
+      if (!res.ok) throw new Error('API PATCH request failed');
+      return text;
+    }
+  }
+
+  // server-side: talk directly to upstream
   return client.apiPatch(`/jobs/${id}`, payload);
 }
 
