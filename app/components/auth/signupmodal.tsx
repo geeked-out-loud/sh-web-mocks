@@ -7,10 +7,12 @@ import CompanyOnboardModal from '@/app/components/CompanyOnboardModal';
 type Props = {
   open: boolean;
   onCloseAction: () => void;
-  onSubmitAction?: (data: { name: string; email: string; password: string }) => void;
+  onSubmitAction?: (data: { name: string; email: string; password: string; companyId?: string | number; companyPayload?: any }) => void;
+  onGoogle?: () => Promise<void> | (() => void);
+  onLinkedIn?: () => Promise<void> | (() => void);
 };
 
-export default function SignupModal({ open, onCloseAction, onSubmitAction }: Props) {
+export default function SignupModal({ open, onCloseAction, onSubmitAction, onGoogle, onLinkedIn }: Props) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCloseAction();
@@ -55,8 +57,8 @@ export default function SignupModal({ open, onCloseAction, onSubmitAction }: Pro
 
       const handleSaved = (companyId: string | number | null, payload: any) => {
         cleanup();
-        // call parent's onSubmitAction with original signup payload and created company id
-        onSubmitAction?.({ ...data, companyId: companyId ?? undefined } as any);
+        // call parent's onSubmitAction with original signup payload, created company id and payload
+        onSubmitAction?.({ ...data, companyId: companyId ?? undefined, companyPayload: payload } as any);
       };
 
       const handleClose = () => {
@@ -140,12 +142,12 @@ export default function SignupModal({ open, onCloseAction, onSubmitAction }: Pro
               <div className="flex items-center gap-2">
                 <button type="submit" className="flex-1 rounded-3xl bg-[#436571]/50 text-white text-xl font-garet-book p-4 font-bold hover:brightness-95 transition">Create Account</button>
                 <div className="flex items-center gap-1">
-                  <button type="button" aria-label="Continue with Google" className="w-14 h-14 rounded-3xl bg-white flex items-center justify-center shadow-sm" title="Continue with Google">
+                  <button type="button" aria-label="Continue with Google" onClick={() => onGoogle?.()} className="w-14 h-14 rounded-3xl bg-white flex items-center justify-center shadow-sm" title="Continue with Google">
                     <img src="/g.png" alt="Google" className="w-7 h-7" />
                   </button>
                 </div>
                 <div className="flex items-center gap-1">
-                    <button type="button" aria-label="Continue with LinkedIn" className="w-14 h-14 rounded-3xl bg-[#0A66C2] flex items-center justify-center shadow-sm" title="Continue with LinkedIn">
+                    <button type="button" aria-label="Continue with LinkedIn" onClick={() => onLinkedIn?.()} className="w-14 h-14 rounded-3xl bg-[#0A66C2] flex items-center justify-center shadow-sm" title="Continue with LinkedIn">
                       <img src="/in_white.png" alt="LinkedIn" className="w-7 h-7" />
                     </button>
                 </div>

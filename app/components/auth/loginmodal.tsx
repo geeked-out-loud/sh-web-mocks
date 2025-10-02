@@ -6,9 +6,11 @@ type Props = {
   open: boolean;
   onCloseAction: () => void;
   onSubmitAction?: (data: { email: string; password: string }) => void;
+  onGoogle?: () => Promise<void> | (() => void);
+  onLinkedIn?: () => Promise<void> | (() => void);
 };
 
-export default function LoginModal({ open, onCloseAction, onSubmitAction }: Props) {
+export default function LoginModal({ open, onCloseAction, onSubmitAction, onGoogle, onLinkedIn }: Props) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCloseAction();
@@ -74,12 +76,12 @@ export default function LoginModal({ open, onCloseAction, onSubmitAction }: Prop
                 <button type="submit" className="flex-1 rounded-3xl bg-[#436571]/50 text-white text-xl font-garet-book p-4 font-bold hover:brightness-95 transition">Sign in</button>
 
                 <div className="flex items-center gap-1">
-                  <button type="button" aria-label="Continue with Google" className="w-14 h-14 rounded-3xl bg-white flex items-center justify-center shadow-sm" title="Continue with Google">
+                  <button type="button" aria-label="Continue with Google" onClick={() => onGoogle?.()} className="w-14 h-14 rounded-3xl bg-white flex items-center justify-center shadow-sm" title="Continue with Google">
                     <img src="/g.png" alt="Google" className="w-7 h-7" />
                   </button>
                 </div>
                 <div className="flex items-center gap-1">
-                    <button type="button" aria-label="Continue with LinkedIn" className="w-14 h-14 rounded-3xl bg-[#0A66C2] flex items-center justify-center shadow-sm" title="Continue with LinkedIn">
+                    <button type="button" aria-label="Continue with LinkedIn" onClick={() => onLinkedIn?.()} className="w-14 h-14 rounded-3xl bg-[#0A66C2] flex items-center justify-center shadow-sm" title="Continue with LinkedIn">
                       <img src="/in_white.png" alt="LinkedIn" className="w-7 h-7" />
                     </button>
                 </div>

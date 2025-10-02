@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithGoogle, signUpWithGoogle, signInWithLinkedIn, signUpWithLinkedIn } from '../config/auth';
 import CompanyOnboardModal from './components/CompanyOnboardModal';
+import LoginModal from './components/auth/loginmodal';
+import SignupModal from './components/auth/signupmodal';
 import api from '@/lib/api';
 import Link from 'next/link';
-import Image from 'next/image';
+import Footer from './components/Footer';
+import Aurora from './components/backgrounds/Aurora';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function Home() {
@@ -143,313 +146,155 @@ export default function Home() {
   
   // Show company modal when stage === 'company'
   return (
-    <main className="min-h-screen">
+    <div className="relative min-h-screen overflow-auto bg-gradient-to-b from-transparent via-black/10 to-black/15">
+      {/* Fixed full-viewport background */}
+      <div className="fixed inset-0 -z-10 w-full h-full pointer-events-none">
+        <Aurora
+          colorStops={["#275E5A", "#364948", "#031348"]}
+          blend={1.0}
+          amplitude={2.2}
+          speed={0.6}
+        />
+      </div>
+
+      {/* Modals */}
       <CompanyOnboardModal open={stage === 'company' || showCompanyModal} onCloseAction={() => { setShowCompanyModal(false); setStage('clean'); }} onSavedAction={handleCompanySaved} />
-  {/* Mobile layout - Floating Card Design */}
-  <div className="md:hidden h-screen overflow-hidden relative bg-[#c2d9ed]">
-        {/* Full-height pattern as background - positioned to show only right half */}
-        <div className="absolute inset-0 z-0">
-          <Image 
-            src="/pattern.svg" 
-            alt="Decorative pattern" 
-            fill 
-            style={{ objectFit: 'cover', objectPosition: 'left center', transform: 'translateX(-35%)'}}
-            priority
-            className="opacity-75"
-          />
-        </div>
-             
-        {/* Content card - floating in the middle */}
-        <div className="flex items-center justify-center h-full px-6 py-10">
-          <div className="w-full max-w-sm bg-white/55 backdrop-blur-md rounded-xl shadow-lg p-6 z-10 border border-white/20">
-            <h1 className="text-3xl font-bold text-[#1c2e4a] mb-1">SmartHire</h1>
-            <p className="text-sm text-gray-700 mb-4 font-light">Your AI-Powered Hiring Partner</p>
 
-            {/* If we're at clean stage show primary CTAs; if company stage show company modal trigger; if auth stage show auth card */}
-            {stage === 'clean' && (
-              <div className="space-y-4">
-                <button onClick={() => { setStage('auth'); setIsLogin(false); }} className="w-full px-4 py-3 bg-[#1c2e4a] text-white rounded-lg">Get Started</button>
-                <button onClick={() => { setStage('auth'); setIsLogin(true); }} className="w-full px-4 py-3 bg-white text-[#1c2e4a] rounded-lg border">Login to Continue</button>
-              </div>
-            )}
+      <LoginModal
+        open={stage === 'auth' && isLogin}
+        onCloseAction={() => setStage('clean')}
+        onSubmitAction={() => { /* local login still unimplemented */ }}
+        onGoogle={handleGoogle}
+        onLinkedIn={handleLinkedIn}
+      />
 
-            {stage === 'auth' && (
-              <div className="space-y-4">
-                <div className="flex bg-white/30 rounded-lg p-1 mb-2 relative">
-                  <div className={`absolute top-1 bottom-1 w-1/2 rounded-md bg-[#1c2e4a] transition-transform duration-300 ease-in-out ${isLogin ? 'translate-x-0' : 'translate-x-full'}`}></div>
-                  <button onClick={() => setIsLogin(true)} className={`flex-1 py-2 text-sm font-medium rounded-md relative z-10 transition-colors duration-300 ${isLogin ? 'text-white' : 'text-[#1c2e4a]'}`}>Login</button>
-                  <button onClick={() => setIsLogin(false)} className={`flex-1 py-2 text-sm font-medium rounded-md relative z-10 transition-colors duration-300 ${!isLogin ? 'text-white' : 'text-[#1c2e4a]'}`}>Signup</button>
-                </div>
+      <SignupModal
+        open={stage === 'auth' && !isLogin}
+        onCloseAction={() => setStage('clean')}
+        onSubmitAction={async (data: any) => {
+          try {
+            setAuthLoading(true);
+            try { sessionStorage.setItem('is_fresh_user', '1'); } catch (_) {}
 
-                <div className="space-y-3">
-                  <div>
-                    <label htmlFor="mobile-email" className="block text-sm font-medium text-gray-800 mb-1">Email</label>
-                    <input type="email" id="mobile-email" className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500" placeholder="you@example.com" />
-                  </div>
+            if (data && data.companyId) {
+              try {
+                if (data.companyPayload && data.companyPayload.name) sessionStorage.setItem('signup_company_name', String(data.companyPayload.name));
+                if (data.companyPayload && data.companyPayload.website) sessionStorage.setItem('signup_company_website', String(data.companyPayload.website));
+                if (data.companyPayload && data.companyPayload.logo_url) sessionStorage.setItem('signup_company_logo_url', String(data.companyPayload.logo_url));
+              } catch (_) {}
 
-                  {!isLogin && (
-                    <div>
-                      <label htmlFor="mobile-name" className="block text-sm font-medium text-gray-800 mb-1">Full Name</label>
-                      <input type="text" id="mobile-name" className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500" placeholder="John Doe" />
-                    </div>
-                  )}
+              try {
+                const rp: Record<string, any> = { company_id: data.companyId };
+                if (data.companyPayload && data.companyPayload.socials) {
+                  const socials: string[] = data.companyPayload.socials ?? [];
+                  for (const s of socials) {
+                    if (!s) continue;
+                    const sl = String(s).trim();
+                    if (sl.toLowerCase().includes('linkedin.com')) {
+                      rp.linkedin_url = sl;
+                      break;
+                    }
+                  }
+                }
+                await api.createRecruiterProfile(rp);
+                setStage('clean');
+                router.push('/home');
+              } catch (e: any) {
+                console.error('Failed to create recruiter profile after signup modal company creation', e);
+                alert(e?.message || 'Failed to create recruiter profile. Please retry.');
+              }
+            } else {
+              setStage('clean');
+            }
+          } finally {
+            setAuthLoading(false);
+          }
+        }}
+        onGoogle={handleGoogle}
+        onLinkedIn={handleLinkedIn}
+      />
 
-                  <div>
-                    <label htmlFor="mobile-password" className="block text-sm font-medium text-gray-800 mb-1">Password</label>
-                    <div className="relative">
-                      <input type={showPassword ? 'text' : 'password'} id="mobile-password" className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500 pr-10" placeholder="••••••••" />
-                      <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                  </div>
+      {/* Page content that scrolls over the fixed background */}
+      <main className="relative z-10 flex items-center justify-center h-screen sm:h-screen px-4 sm:px-6">
+        <div className="w-full max-w-6xl text-start relative">
+          <h1 className="font-garet text-4xl sm:text-5xl md:text-8xl font-extrabold text-white leading-tight drop-shadow-md">SmartHire</h1>
+          <p className="font-garet-book font-bold text-base sm:text-lg text-white/85 mt-2">Your AI-Powered Hiring Partner.</p>
 
-                  {!isLogin && (
-                    <div>
-                      <label htmlFor="mobile-confirmPassword" className="block text-sm font-medium text-gray-800 mb-1">Confirm Password</label>
-                      <div className="relative">
-                        <input type={showConfirmPassword ? 'text' : 'password'} id="mobile-confirmPassword" className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500 pr-10" placeholder="••••••••" />
-                        <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>
-                          {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <button className="w-full px-4 py-3 bg-[#1c2e4a] text-white rounded-lg">{isLogin ? 'Log in' : 'Sign up'}</button>
-                </div>
-
-                <div className="pt-2 text-center">
-                  <span className="text-xs font-medium text-gray-800">or continue with</span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  <button onClick={handleGoogle} disabled={authLoading} className="flex items-center justify-center py-2.5 bg-white/90 rounded-md border text-[#1c2e4a] border-gray-300">Google</button>
-                  <button className="flex items-center justify-center py-2.5 bg-white/90 rounded-md border text-[#1c2e4a] border-gray-300">Apple</button>
-                  <button onClick={handleLinkedIn} disabled={authLoading} className="flex items-center justify-center py-2.5 bg-white/90 rounded-md border text-[#1c2e4a] border-gray-300">LinkedIn</button>
-                </div>
-              </div>
-            )}
+          <div className="mt-4 sm:mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-start gap-3 sm:gap-6">
+            <button onClick={() => { setStage('auth'); setIsLogin(false); }} className="inline-block rounded-full px-5 py-3 text-sm sm:text-base font-medium shadow-md bg-white text-gray-900 transform transition-all duration-200 hover:scale-[1.02]">Get Started</button>
+            <button onClick={() => { setStage('auth'); setIsLogin(true); }} className="inline-block border border-white/10 bg-black/10 backdrop-blur-lg text-white rounded-full px-4 py-3 text-sm sm:text-base font-medium inline-flex items-center gap-2 transition-colors duration-200 hover:bg-white/10">Log In</button>
           </div>
-        </div>
-      </div>
 
-      {/* Desktop layout - Completely refactored with sliding animations */}
-      <div className="hidden md:flex h-screen overflow-hidden">
-        {/* Left side with pattern */}
-        <div className="w-2/5 bg-[#c2d9ed] relative">
-          <div className="absolute inset-0">
-            <Image 
-              src="/pattern.svg" 
-              alt="Decorative pattern" 
-              fill 
-              style={{ objectFit: 'cover', objectPosition: 'center' }}
-              priority
-              className="opacity-90"
-            />
-          </div>
-        </div>
-        
-        {/* Right side with content - main container */}
-        <div className="w-3/5 bg-[#c2d9ed] flex items-center justify-center">
-          {/* Content wrapper with fixed height to prevent scrolling */}
-          <div className="w-full max-w-xl px-12 relative h-[600px] max-h-[90vh]">
-            {/* Initial content - fades out when auth card appears */}
-            <div 
-              className={`absolute inset-0 flex items-center transition-all duration-500 ease-in-out ${
-                  stage === 'auth' ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                }`}
-            >
-              <div className="w-full">
-                <h1 className="text-5xl lg:text-6xl font-bold text-[#1c2e4a] mb-6 text-left">SmartHire</h1>
-                <p className="text-xl text-gray-700 mb-12 font-light text-left">Your AI-Powered Hiring Partner</p>
-                
-                <div className="flex justify-start">
-                  <button
-                    onClick={() => { setStage('auth'); setIsLogin(false);} }
-                    className="px-10 py-4 bg-[#1c2e4a] hover:bg-[#203354] text-white rounded-lg transition duration-300 shadow-lg text-lg font-medium relative z-20"
-                  >
-                    Get Started
-                  </button>
-                  <button
-                    onClick={() => { setStage('auth'); setIsLogin(true); }}
-                    className="ml-4 px-6 py-4 bg-white text-[#1c2e4a] rounded-lg border border-[#1c2e4a]/20"
-                  >
-                    Login to Continue
-                  </button>
-                </div>
-              </div>
+          <div className="absolute left-1/2 top-full mt-36 transform -translate-x-1/2">
+            <div className="mx-auto max-w-max px-3 py-2 rounded-full bg-white/6 sm:backdrop-blur-sm border border-white/10 text-white/90 text-sm inline-flex items-center gap-2">
+              <Link href="#exclusive-offerings" onClick={(e) => {
+                e.preventDefault();
+                const target = document.getElementById('features');
+                if (target) {
+                  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                  const behavior = prefersReducedMotion ? 'auto' : 'smooth';
+                  try { (target as HTMLElement).scrollIntoView({ behavior: behavior as ScrollBehavior, block: 'start' }); } catch (err) { (target as HTMLElement).scrollIntoView(); }
+                }
+              }} className="inline-flex items-center gap-2 hover:underline"><span className="font-garet-book font-bold text-sm">Scroll to Learn More</span></Link>
             </div>
-          
-            {/* Auth Card with slide-up animation - centered on page */}
-            <div 
-              className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ease-out ${
-                  stage === 'auth' ? 'transform translate-y-0 opacity-100 z-30' : 'transform translate-y-[50%] opacity-0 invisible'
-                }`}
-            >
-              <div className="bg-white/75 backdrop-blur-md rounded-xl shadow-xl border border-white/20 w-full max-w-md overflow-y-auto max-h-[90vh]">
-                <div className="flex justify-between items-center px-6 pt-6 border-b border-gray-100">
-                  <h2 className="text-2xl font-bold text-[#1c2e4a]">Welcome</h2>
-                  <button 
-                    onClick={() => setStage('clean')}
-                    className="text-[#1c2e4a] hover:text-[#203354] p-2"
-                  >
-                    <span className="sr-only">Close</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+          </div>
+        </div>
+      </main>
 
-                <div className="px-6 pt-4 pb-6">
-                  {/* Login/Signup Toggle with sliding effect */}
-                  <div className="flex bg-white/30 rounded-lg p-1 mb-6 relative">
-                    {/* Sliding background - absolutely positioned */}
-                    <div 
-                      className={`absolute top-1 bottom-1 w-1/2 rounded-md bg-[#1c2e4a] transition-transform duration-300 ease-in-out ${
-                        isLogin ? 'translate-x-0' : 'translate-x-full'
-                      }`}
-                    ></div>
-                    
-                    {/* Login button */}
-                    <button 
-                      onClick={() => setIsLogin(true)}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md relative z-10 transition-colors duration-300 ${
-                        isLogin ? 'text-white' : 'text-[#1c2e4a]'
-                      }`}
-                    >
-                      Login
-                    </button>
-                    
-                    {/* Signup button */}
-                    <button 
-                      onClick={() => setIsLogin(false)}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md relative z-10 transition-colors duration-300 ${
-                        !isLogin ? 'text-white' : 'text-[#1c2e4a]'
-                      }`}
-                    >
-                      Signup
-                    </button>
-                  </div>
-                  
-                  {/* Form - Login or Signup - Compact version */}
-                  <div className="space-y-3">
-                    {/* Common field: Email */}
-                    <div>
-                      <label htmlFor="desktop-email" className="block text-sm font-medium text-gray-800 mb-1">Email</label>
-                      <input 
-                        type="email" 
-                        id="desktop-email" 
-                        className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500"
-                        placeholder="you@example.com"
-                      />
-                    </div>
-                    
-                    {/* Name field - only for signup */}
-                    {!isLogin && (
-                      <div>
-                        <label htmlFor="desktop-name" className="block text-sm font-medium text-gray-800 mb-1">Full Name</label>
-                        <input 
-                          type="text" 
-                          id="desktop-name" 
-                          className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500"
-                          placeholder="John Doe"
-                        />
-                      </div>
-                    )}
-                    
-                    {/* Password field */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label htmlFor="desktop-password" className="block text-sm font-medium text-gray-800">Password</label>
-                        {isLogin && (
-                          <a href="#" className="text-xs font-medium text-[#1c2e4a] hover:underline">Forgot?</a>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <input 
-                          type={showPassword ? "text" : "password"} 
-                          id="desktop-password" 
-                          className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500 pr-10"
-                          placeholder="••••••••"
-                        />
-                        <button 
-                          type="button" 
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                          onClick={() => setShowPassword(!showPassword)}
-                          aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
-                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Confirm Password - only for signup */}
-                    {!isLogin && (
-                      <div>
-                        <label htmlFor="desktop-confirmPassword" className="block text-sm font-medium text-gray-800 mb-1">Confirm Password</label>
-                        <div className="relative">
-                          <input 
-                            type={showConfirmPassword ? "text" : "password"} 
-                            id="desktop-confirmPassword" 
-                            className="w-full px-3 py-2 bg-white/80 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1c2e4a] shadow-sm placeholder-gray-500 pr-10"
-                            placeholder="••••••••"
-                          />
-                          <button 
-                            type="button" 
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                          >
-                            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Submit button */}
-                    {/* Navigation must only happen after successful auth or full signup flow.
-                        Replace unconditional Link with a button that performs no navigation here.
-                        Social/third-party handlers (handleGoogle / handleLinkedIn) will navigate on success.
-                        For local form-based login/signup we intentionally do not navigate here. */}
-                    <div className="block w-full">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          // No-op navigation: actual navigation is handled by provider flows
-                          // or by the parent when company+recruiter creation completes.
-                          // Keep this button for UX parity; if you want to implement
-                          // local form auth, wire it to your auth functions and
-                          // navigate on success.
-                        }}
-                        className="w-full px-4 py-2.5 bg-[#1c2e4a] hover:bg-[#203354] text-white rounded-lg transition duration-300 shadow-lg text-sm font-medium mt-2"
-                      >
-                        {isLogin ? 'Log in' : 'Sign up'}
-                      </button>
-                    </div>
-                    
-                    <div className="pt-3 text-center">
-                      <span className="text-xs font-medium text-gray-800">or continue with</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-2">
-                      <button onClick={handleGoogle} disabled={authLoading} className="flex items-center justify-center py-2 bg-white/90 rounded-md border border-gray-300 hover:bg-white shadow-sm">
-                        <span className="text-xs font-medium text-gray-700">Google</span>
-                      </button>
-                      <button className="flex items-center justify-center py-2 bg-white/90 rounded-md border border-gray-300 hover:bg-white shadow-sm">
-                        <span className="text-xs font-medium text-gray-700">Apple</span>
-                      </button>
-                      <button onClick={handleLinkedIn} disabled={authLoading} className="flex items-center justify-center py-2 bg-white/90 rounded-md border border-gray-300 hover:bg-white shadow-sm">
-                        <span className="text-xs font-medium text-gray-700">LinkedIn</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+      <section id="features" className="relative z-10 bg-transparent px-4 sm:px-6 pt-10 sm:pt-12 pb-20">
+        <div className="max-w-6xl mx-auto text-white/90">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-10 sm:mb-12">
+            <div>
+              <h3 className="text-2xl font-semibold text-white">Affordable Platform</h3>
+              <p className="mt-3 text-white/80">Streamline your hiring process with cost-efficient solutions that maximize value without compromising on quality.</p>
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-semibold text-white">All-In-One Hiring Platform</h3>
+              <p className="mt-3 text-white/80">Transform your recruitment with SmartHire’s AI-powered job posting, smart shortlisting, and seamless candidate management.</p>
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-semibold text-white">Automated Smart Hiring</h3>
+              <p className="mt-3 text-white/80">From job creation to shortlisting, experience hiring that’s faster, smarter, and fully automated.</p>
+            </div>
+          </div>
+
+          <div className="mt-6 sm:mt-8">
+            <h3 id="exclusive-offerings" className="text-2xl sm:text-3xl font-semibold text-white mb-4 sm:mb-6">Exclusive Offerings</h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <div className="bg-white/6 backdrop-blur-sm border border-white/10 rounded-lg p-4">
+                <h4 className="text-base sm:text-lg font-semibold text-white">AI-Generated Job Descriptions</h4>
+                <p className="mt-2 text-white/80 text-sm">Auto-create tailored JDs in seconds</p>
+              </div>
+
+              <div className="bg-white/6 backdrop-blur-sm border border-white/10 rounded-lg p-4">
+                <h4 className="text-lg font-semibold text-white">Smart Role Predictions</h4>
+                <p className="mt-2 text-white/80">AI suggests roles based on market trends and past hiring</p>
+              </div>
+
+              <div className="bg-white/6 backdrop-blur-sm border border-white/10 rounded-lg p-4">
+                <h4 className="text-lg font-semibold text-white">One-Click Job Posting</h4>
+                <p className="mt-2 text-white/80">Publish across multiple platforms instantly</p>
+              </div>
+
+              <div className="bg-white/6 backdrop-blur-sm border border-white/10 rounded-lg p-4">
+                <h4 className="text-lg font-semibold text-white">Intelligent Candidate Matching</h4>
+                <p className="mt-2 text-white/80">AI shortlists the best-fit candidates automatically</p>
               </div>
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Separator + bottom CTAs */}
+      <div className="relative z-10 w-full">
+        <div className="max-w-full mx-auto">
+          <hr className="border-t border-white/10" />
+          <Footer />
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

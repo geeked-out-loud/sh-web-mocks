@@ -1,7 +1,9 @@
-'use client';
+"use client";
+import Aurora from '@/app/components/backgrounds/Aurora';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, User, Calendar, FileText, ChevronRight, CheckCheck, Sparkles, Bot, Trash, Download } from 'lucide-react';
+import { Plus, User, Calendar, FileText, ChevronRight, CheckCheck, Sparkles, Bot, Trash, Download, Briefcase, Timer, Users, Handshake, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import Dropdown from "../components/ui/Dropdown";
 import Image from 'next/image';
 import Nav from '@/app/components/Nav';
 import { getRecruiterProfile, createRecruiterProfile, getJobs, createJob, getJobById, generateJobJD, updateJob } from '@/lib/api';
@@ -685,11 +687,11 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
   // No longer need handleSearch as it's moved to the Nav component
   
   return (
-    <main className="min-h-screen bg-white flex flex-col">
-
+    <div className="relative min-h-screen overflow-auto bg-black">
+      <main className="min-h-screen flex flex-col text-white">
       <div className="flex-1 overflow-auto">
         {/* Top Section Container */}
-        <div className='bg-gradient-to-br from-[#0F387A]/25 to-[#126F7D]/25 rounded-b-4xl'>
+  <div className='bg-gradient-to-br from-[#0F387A]/32 to-[#126F7D]/32 rounded-b-4xl'>
         <Nav />
           {/* Company onboarding moved to landing page; removed modal from this home view. */}
           {/* Welcome section */}
@@ -704,36 +706,66 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                 />
               </div>
               <div>
-                <p className="text-2xl font-medium text-[#1c2e4a]">{"Welcome Back, " + (recruiterProfile?.profile?.full_name ?? 'Recruiter')}</p>
+                <p className="text-2xl font-medium text-white drop-shadow">{"Welcome Back, " + (recruiterProfile?.profile?.full_name ?? 'Recruiter')}</p>
               </div>
             </div>
           </div>
         
           {/* Stats cards - horizontal scrollable row */}
           <div className="px-6 py-12">
-            <div className="flex overflow-x-auto scrollbar-hide pb-2">
-              <div className="bg-white/85 rounded-xl shadow-sm p-4 backdrop-blur-xl transition-all hover:shadow-md cursor-pointer mr-4 flex-shrink-0" style={{ width: '300px' }}>
-                <p className="text-sm text-gray-500 mb-1">Time to shortlist</p>
-                <p className="text-3xl font-semibold text-[#1c2e4a]">09</p>
-                <p className="text-xs text-gray-500 mt-1">Avg last 7 days</p>
+            <div className="flex overflow-x-auto scrollbar-hide pb-2 gap-4">
+              {/* Active Jobs - Main KPI */}
+              <div className="relative bg-gradient-to-br from-[#0F387A]/90 to-[#126F7D]/80 rounded-2xl shadow-xl p-6 flex-shrink-0 border-2 border-[#0F387A] min-w-[320px] max-w-xs flex flex-col justify-between hover:scale-[1.04] hover:shadow-2xl transition-transform duration-200 group">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="bg-white/10 p-2 rounded-full"><Briefcase className="w-6 h-6 text-blue-200" /></span>
+                  <span className="text-lg font-bold text-white drop-shadow">Active Jobs</span>
+                </div>
+                <div className="flex items-end gap-2">
+                  <span className="text-5xl font-extrabold text-white drop-shadow">09</span>
+                  <span className="text-green-400 flex items-center text-sm font-semibold ml-2"><ArrowUpRight className="w-4 h-4 mr-1" />+2</span>
+                </div>
+                <span className="text-xs text-blue-100 mt-2">2 new this week</span>
+                {/* Sparkline placeholder */}
+                <div className="absolute bottom-3 right-3 opacity-30"><svg width="60" height="18"><polyline points="0,15 10,10 20,12 30,7 40,9 50,4 60,8" fill="none" stroke="#fff" strokeWidth="2"/></svg></div>
               </div>
-              
-              <div className="bg-white/85 rounded-xl shadow-sm p-4 backdrop-blur-xl transition-all hover:shadow-md cursor-pointer mr-4 flex-shrink-0" style={{ width: '300px' }}>
-                <p className="text-sm text-gray-500 mb-1">Active jobs</p>
-                <p className="text-3xl font-semibold text-[#1c2e4a]">09</p>
-                <p className="text-xs text-gray-500 mt-1">2 new this week</p>
+              {/* Time to Shortlist */}
+              <div className="relative bg-[#12243D]/80 rounded-2xl shadow-lg p-5 flex-shrink-0 border border-[#28334a]/60 min-w-[220px] max-w-xs flex flex-col justify-between hover:scale-[1.03] hover:shadow-xl transition-transform duration-200 group">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-white/10 p-2 rounded-full"><Timer className="w-5 h-5 text-blue-200" /></span>
+                  <span className="text-base font-semibold text-white">Time to Shortlist</span>
+                </div>
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl font-bold text-white">09</span>
+                  <span className="text-red-400 flex items-center text-xs font-semibold ml-1"><ArrowDownRight className="w-4 h-4 mr-1" />-1</span>
+                </div>
+                <span className="text-xs text-blue-100 mt-1">Avg last 7 days</span>
+                <div className="absolute bottom-3 right-3 opacity-20"><svg width="50" height="14"><polyline points="0,10 10,8 20,9 30,6 40,7 50,4" fill="none" stroke="#fff" strokeWidth="2"/></svg></div>
               </div>
-              
-              <div className="bg-white/85 rounded-xl shadow-sm p-4 backdrop-blur-xl transition-all hover:shadow-md cursor-pointer mr-4 flex-shrink-0" style={{ width: '300px' }}>
-                <p className="text-sm text-gray-500 mb-1">Candidates in Pipeline</p>
-                <p className="text-3xl font-semibold text-[#1c2e4a]">09</p>
-                <p className="text-xs text-gray-500 mt-1">↓ 12%</p>
+              {/* Candidates in Pipeline */}
+              <div className="relative bg-[#12243D]/80 rounded-2xl shadow-lg p-5 flex-shrink-0 border border-[#28334a]/60 min-w-[220px] max-w-xs flex flex-col justify-between hover:scale-[1.03] hover:shadow-xl transition-transform duration-200 group">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-white/10 p-2 rounded-full"><Users className="w-5 h-5 text-blue-200" /></span>
+                  <span className="text-base font-semibold text-white">Candidates in Pipeline</span>
+                </div>
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl font-bold text-white">09</span>
+                  <span className="text-red-400 flex items-center text-xs font-semibold ml-1"><ArrowDownRight className="w-4 h-4 mr-1" />-12%</span>
+                </div>
+                <span className="text-xs text-blue-100 mt-1">↓ 12% this week</span>
+                <div className="absolute bottom-3 right-3 opacity-20"><svg width="50" height="14"><polyline points="0,12 10,10 20,11 30,8 40,9 50,6" fill="none" stroke="#fff" strokeWidth="2"/></svg></div>
               </div>
-
-              <div className="bg-white/85 rounded-xl shadow-sm p-4 backdrop-blur-xl transition-all hover:shadow-md cursor-pointer mr-4 flex-shrink-0" style={{ width: '300px' }}>
-                <p className="text-sm text-gray-500 mb-1">Offer Acceptance Rate</p>
-                <p className="text-3xl font-semibold text-[#1c2e4a]">26</p>
-                <p className="text-xs text-gray-500 mt-1">↓ 3%</p>
+              {/* Offer Acceptance Rate */}
+              <div className="relative bg-[#12243D]/80 rounded-2xl shadow-lg p-5 flex-shrink-0 border border-[#28334a]/60 min-w-[220px] max-w-xs flex flex-col justify-between hover:scale-[1.03] hover:shadow-xl transition-transform duration-200 group">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-white/10 p-2 rounded-full"><Handshake className="w-5 h-5 text-blue-200" /></span>
+                  <span className="text-base font-semibold text-white">Offer Acceptance Rate</span>
+                </div>
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl font-bold text-white">26%</span>
+                  <span className="text-red-400 flex items-center text-xs font-semibold ml-1"><ArrowDownRight className="w-4 h-4 mr-1" />-3%</span>
+                </div>
+                <span className="text-xs text-blue-100 mt-1">↓ 3% this week</span>
+                <div className="absolute bottom-3 right-3 opacity-20"><svg width="50" height="14"><polyline points="0,8 10,10 20,9 30,12 40,11 50,14" fill="none" stroke="#fff" strokeWidth="2"/></svg></div>
               </div>
             </div>
           </div>
@@ -747,46 +779,44 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
               {/* Fixed "Post New Job" button on the left */}
               <button 
                 onClick={() => setActiveTab('postJob')} 
-                className={`flex-shrink-0 px-4 sm:px-5 md:px-6 py-2 sm:py-2 md:py-2.5 text-sm sm:text-sm md:text-md font-medium rounded-full transition-all ${
+                className={`flex-shrink-0 px-4 sm:px-5 md:px-6 py-2 sm:py-2 md:py-2.5 text-sm sm:text-sm md:text-md font-medium rounded-full transition-all border ${
                   activeTab === 'postJob' 
-                    ? 'bg-[#0F387A] text-white' 
-                    : 'bg-[#0F387A]/6 text-[#0F387A] hover:bg-[#0F387A]/10'
+                    ? 'bg-[#0B283E] text-white border-[#0F387A]' 
+                    : 'bg-[#0B283E]/40 text-blue-200 border-[#28334a] hover:bg-[#232b3a]'
                 }`}
               >
                 Post New Job
               </button>
-              
               {/* Divider */}
-              <div className="mx-3 sm:mx-3 md:mx-4 h-7 sm:h-7 md:h-8 border-r border-gray-300"></div>
-              
+              <div className="mx-3 sm:mx-3 md:mx-4 h-7 sm:h-7 md:h-8 border-r border-[#28334a]/70"></div>
               {/* Scrollable container for other buttons */}
               <div className="overflow-x-auto scrollbar-hide flex space-x-3 sm:space-x-3 md:space-x-4">
                 <button 
                   onClick={() => setActiveTab('recent')} 
-                  className={`flex-shrink-0 px-4 sm:px-5 md:px-6 py-2 sm:py-2 md:py-2.5 text-sm sm:text-sm md:text-md font-medium rounded-full transition-all ${
+                  className={`flex-shrink-0 px-4 sm:px-5 md:px-6 py-2 sm:py-2 md:py-2.5 text-sm sm:text-sm md:text-md font-medium rounded-full transition-all border ${
                     activeTab === 'recent' 
-                      ? 'bg-[#0F387A] text-white' 
-                      : 'bg-[#0F387A]/6 text-[#0F387A] hover:bg-[#0F387A]/10'
+                    ? 'bg-[#0B283E] text-white border-[#0F387A]' 
+                    : 'bg-[#0B283E]/40 text-blue-200 border-[#28334a] hover:bg-[#232b3a]'
                   }`}
                 >
                   Recent Openings
                 </button>
                 <button 
                   onClick={() => setActiveTab('drafts')} 
-                  className={`flex-shrink-0 px-4 sm:px-5 md:px-6 py-2 sm:py-2 md:py-2.5 text-sm sm:text-sm md:text-md font-medium rounded-full transition-all ${
+                  className={`flex-shrink-0 px-4 sm:px-5 md:px-6 py-2 sm:py-2 md:py-2.5 text-sm sm:text-sm md:text-md font-medium rounded-full transition-all border ${
                     activeTab === 'drafts' 
-                      ? 'bg-[#0F387A] text-white' 
-                      : 'bg-[#0F387A]/6 text-[#0F387A] hover:bg-[#0F387A]/10'
+                    ? 'bg-[#0B283E] text-white border-[#0F387A]' 
+                    : 'bg-[#0B283E]/40 text-blue-200 border-[#28334a] hover:bg-[#232b3a]'
                   }`}
                 >
                   Drafts
                 </button>
                 <button 
                   onClick={() => setActiveTab('completed')} 
-                  className={`flex-shrink-0 px-4 sm:px-5 md:px-6 py-2 sm:py-2 md:py-2.5 text-sm sm:text-sm md:text-md font-medium rounded-full transition-all ${
+                  className={`flex-shrink-0 px-4 sm:px-5 md:px-6 py-2 sm:py-2 md:py-2.5 text-sm sm:text-sm md:text-md font-medium rounded-full transition-all border ${
                     activeTab === 'completed' 
-                      ? 'bg-[#0F387A] text-white' 
-                      : 'bg-[#0F387A]/6 text-[#0F387A] hover:bg-[#0F387A]/10'
+                    ? 'bg-[#0B283E] text-white border-[#0F387A]' 
+                    : 'bg-[#0B283E]/40 text-blue-200 border-[#28334a] hover:bg-[#232b3a]'
                   }`}
                 >
                   Completed Hires
@@ -799,13 +829,13 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
           {activeTab === 'postJob' && (
             <div className="px-6 py-6">
                 <div className="flex items-center mb-4">
-                  <h2 className="text-xl font-bold text-[#1c2e4a]">AI Suggested Jobs</h2>
+                  <h2 className="text-xl font-bold text-white">AI Suggested Jobs</h2>
                   <div className="ml-2 p-1 bg-[#0F387A]/10 rounded-full">
                     <Bot className="h-5 w-5 text-[#0F387A]" />
                   </div>
                 </div>              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {(suggestedJobs.length ? suggestedJobs : recentOpenings.slice(0, 6)).map(job => (
-                  <div key={job.id} className="bg-white rounded-lg shadow-sm p-4 relative transition-all border border-dashed border-[#0F387A]/20 animate-fadeIn">
+                  <div key={job.id} className="bg-[#181f2a]/90 rounded-lg shadow-sm p-4 relative transition-all border border-dashed border-[#0F387A]/30 animate-fadeIn">
                     <div className="absolute top-3 right-3">
                       <div className="flex items-center bg-[#0F387A]/10 rounded-full px-2 py-0.5">
                         <Sparkles className="h-3 w-3 text-[#0F387A] mr-1" />
@@ -815,16 +845,16 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                     
                     <div className="flex items-center mb-3">
                       <div className="w-10 h-10 rounded-md bg-[#0F387A]/10 flex items-center justify-center mr-3">
-                        <span className="text-xs font-bold text-[#0F387A]">{job.logo}</span>
+                        <span className="text-xs font-bold text-blue-200">{job.logo}</span>
                       </div>
                       <div className="flex-grow">
-                        <h3 className="font-medium text-[#1c2e4a]">{job.title}</h3>
-                        <p className="text-xs text-gray-500">{job.company} · {job.location}</p>
+                        <h3 className="font-medium text-white">{job.title}</h3>
+                        <p className="text-xs text-blue-200">{job.company} · {job.location}</p>
                       </div>
                     </div>
                     
                     <div className="flex items-center justify-between mt-3">
-                      <span className="bg-gray-100 text-gray-800 text-xs px-2.5 py-0.5 rounded-full">{job.type ?? 'Full time'}</span>
+                      <span className="bg-[#0F387A]/20 text-blue-200 text-xs px-2.5 py-0.5 rounded-full">{job.type ?? 'Full time'}</span>
                       <div className="flex items-center space-x-1.5">
                         <button 
                           onClick={() => openJobModal(job)}
@@ -868,13 +898,13 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                       }
                     });
                   }}
-                  className="bg-white rounded-lg shadow-sm p-4 relative transition-all border-2 border-dashed border-gray-200 hover:border-[#0F387A]/30 hover:shadow-md cursor-pointer flex items-center justify-center animate-fadeIn"
+                  className="bg-[#181f2a]/90 rounded-lg shadow-sm p-4 relative transition-all border-2 border-dashed border-[#0F387A]/30 hover:border-blue-400/40 hover:shadow-md cursor-pointer flex items-center justify-center animate-fadeIn"
                 >
                   <div className="flex items-center">
                     <div className="w-10 h-10 rounded-full bg-[#0F387A]/10 flex items-center justify-center mr-3">
                       <Plus className="h-5 w-5 text-[#0F387A]" />
                     </div>
-                    <p className="text-md font-medium text-[#1c2e4a]">Add New Jobs</p>
+                    <p className="text-md font-medium text-white">Add New Jobs</p>
                   </div>
                 </div>
               </div>
@@ -884,7 +914,7 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
           {activeTab === 'recent' && (
             <div className="px-6 py-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-[#1c2e4a]">Recent Job Openings</h2>
+                <h2 className="text-xl font-bold text-white">Recent Job Openings</h2>
                 <button className="bg-gray-100 text-gray-600 rounded-full p-2 hover:bg-gray-200 transition">
                   <Plus className="h-5 w-5" />
                 </button>
@@ -892,7 +922,7 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
             
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {recentOpenings.map(job => (
-                  <div key={job.id} className="bg-white rounded-lg shadow-sm p-4 relative transition-all hover:shadow-md cursor-pointer" onClick={() => openJobModal(job)}>
+                  <div key={job.id} className="bg-[#181f2a]/90 rounded-lg shadow-sm p-4 relative transition-all hover:shadow-md cursor-pointer border border-[#28334a]/60" onClick={() => openJobModal(job)}>
                     <div className="absolute top-3 right-3">
                       <ChevronRight className="h-4 w-4 text-gray-500" />
                     </div>
@@ -914,15 +944,15 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                         </div>
                       )}
                       <div className="flex-grow">
-                        <h3 className="font-medium text-[#1c2e4a]">{job.title}</h3>
-                        <p className="text-xs text-gray-500">{job.company} · {job.location}</p>
+                        <h3 className="font-medium text-white">{job.title}</h3>
+                        <p className="text-xs text-blue-200">{job.company} · {job.location}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="bg-gray-100 text-gray-800 text-xs px-2.5 py-0.5 rounded-full">{job.type}</span>
+                      <span className="bg-[#0F387A]/20 text-blue-200 text-xs px-2.5 py-0.5 rounded-full">{job.type}</span>
                       <div className="flex items-center text-xs text-gray-500">
                         <User className="h-3 w-3 mr-1" />
-                        <span>{job.applications} applications</span>
+                        <span className="text-blue-200">{job.applications} applications</span>
                       </div>
                     </div>
                   </div>
@@ -934,7 +964,7 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
           {activeTab === 'drafts' && (
             <div className="px-6 py-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-[#1c2e4a]">Drafts</h2>
+                <h2 className="text-xl font-bold text-white">Drafts</h2>
                 <button className="bg-gray-100 text-gray-600 rounded-full p-2 hover:bg-gray-200 transition">
                   <Plus className="h-5 w-5" />
                 </button>
@@ -945,7 +975,7 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                   <div className="col-span-full text-center text-gray-500">No drafts</div>
                 ) : (
                   drafts.map(job => (
-                    <div key={job.id} className="bg-white rounded-lg shadow-sm p-4 relative transition-all hover:shadow-md cursor-pointer" onClick={() => openJobModal(job)}>
+                    <div key={job.id} className="bg-[#181f2a]/90 rounded-lg shadow-sm p-4 relative transition-all hover:shadow-md cursor-pointer border border-[#28334a]/60" onClick={() => openJobModal(job)}>
                       <div className="absolute top-3 right-3">
                         <ChevronRight className="h-4 w-4 text-gray-500" />
                       </div>
@@ -967,15 +997,15 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                           </div>
                         )}
                         <div className="flex-grow">
-                          <h3 className="font-medium text-[#1c2e4a]">{job.title}</h3>
-                          <p className="text-xs text-gray-500">{job.company} · {job.location}</p>
+                          <h3 className="font-medium text-white">{job.title}</h3>
+                          <p className="text-xs text-blue-200">{job.company} · {job.location}</p>
                         </div>
                       </div>
                       <div className="flex items-center justify-between mt-2">
-                        <span className="bg-gray-100 text-gray-800 text-xs px-2.5 py-0.5 rounded-full">{job.type}</span>
+                        <span className="bg-[#0F387A]/20 text-blue-200 text-xs px-2.5 py-0.5 rounded-full">{job.type}</span>
                         <div className="flex items-center text-xs text-gray-500">
                           <User className="h-3 w-3 mr-1" />
-                          <span>{job.applications} applications</span>
+                          <span className="text-blue-200">{job.applications} applications</span>
                         </div>
                       </div>
                     </div>
@@ -988,7 +1018,7 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
           {activeTab === 'completed' && (
             <div className="px-6 py-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-[#1c2e4a]">Completed Hires</h2>
+                <h2 className="text-xl font-bold text-white">Completed Hires</h2>
                 <button className="bg-gray-100 text-gray-600 rounded-full p-2 hover:bg-gray-200 transition">
                   <FileText className="h-5 w-5" />
                 </button>
@@ -996,7 +1026,7 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
             
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {completedHires.map(job => (
-                  <div key={job.id} className="bg-white rounded-lg shadow-sm p-4 relative transition-all hover:shadow-md cursor-pointer">
+                  <div key={job.id} className="bg-[#181f2a]/90 rounded-lg shadow-sm p-4 relative transition-all hover:shadow-md cursor-pointer border border-[#28334a]/60">
                     <div className="absolute top-3 right-3">
                       <CheckCheck className="h-5 w-5 text-gray-500" />
                     </div>
@@ -1014,8 +1044,8 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                         }`}>{job.logo}</span>
                       </div>
                       <div className="flex-grow">
-                        <h3 className="font-medium text-[#1c2e4a]">{job.title}</h3>
-                        <p className="text-xs text-gray-500">{job.company} · {job.location}</p>
+                        <h3 className="font-medium text-white">{job.title}</h3>
+                        <p className="text-xs text-blue-200">{job.company} · {job.location}</p>
                       </div>
                     </div>
                     
@@ -1023,11 +1053,11 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-                          <span className="text-xs text-gray-500">Hired on {job.hiredDate}</span>
+                          <span className="text-xs text-blue-200">Hired on {job.hiredDate}</span>
                         </div>
                         <div className="flex items-center">
                           <User className="h-4 w-4 text-gray-400 mr-2" />
-                          <span className="text-xs text-gray-500">{job.candidate}</span>
+                          <span className="text-xs text-blue-200">{job.candidate}</span>
                         </div>
                       </div>
                     </div>
@@ -1040,315 +1070,298 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
       </div>
       {/* Job Details Modal */}
       {modalOpen && selectedJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Overlay */}
-          <div 
-            className="absolute inset-0 bg-black/20 backdrop-blur-sm" 
-            onClick={closeModal}
-          ></div>
-          
+          <div className="absolute inset-0 bg-black/45 backdrop-blur-xs" onClick={closeModal} />
           {/* Modal Content */}
-          <div className="bg-white/50 backdrop-blur-md rounded-2xl shadow-xl w-full max-w-xl h-[70vh] relative overflow-hidden animate-fadeIn flex flex-col">
-            {/* Close button */}
-            <button 
-              onClick={closeModal}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
-            
-            {/* Header with job icon and title - Fixed at top */}
-            <div className="px-8 pt-8 pb-4 flex-shrink-0">
-              <div className="flex items-center">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center mr-4">
-                  <span className="text-lg font-bold text-blue-600">{selectedJob.logo}</span>
+          <div className="relative w-full max-w-3xl rounded-2xl p-1" aria-modal="true" role="dialog" aria-label="Job Details">
+            <div className="w-full bg-[linear-gradient(rgba(67,101,113,0.08),rgba(54,73,72,0.06))] backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl max-h-[80vh] flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-14 h-14 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center mr-4">
+                    <span className="text-lg font-bold text-blue-600">{selectedJob.logo}</span>
+                  </div>
+                  <div className="flex-1">
+                    {isEditMode ? (
+                      <input
+                        type="text"
+                        value={editableJobTitle}
+                        onChange={(e) => setEditableJobTitle(e.target.value)}
+                        className="w-full text-xl font-bold text-white bg-[#436571]/10 border border-white/10 rounded-md px-3 py-1 mb-2 focus:outline-none focus:border-[#436571] focus:border-1"
+                      />
+                    ) : (
+                      <h2 className="text-xl font-bold text-white">{editableJobTitle}</h2>
+                    )}
+                    {isEditMode ? (
+                      <select
+                        value={editableJobRole}
+                        onChange={(e) => setEditableJobRole(e.target.value)}
+                        className="text-sm text-white/80 bg-[#436571]/10 border border-white/10 rounded-md px-2 py-1 w-full focus:outline-none focus:border-[#436571] focus:border-1"
+                      >
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Internship">Internship</option>
+                        <option value="Freelance">Freelance</option>
+                      </select>
+                    ) : (
+                      <p className="text-sm text-white/70">Role: {editableJobRole}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1">
-                  {isEditMode ? (
-                    <input
-                      type="text"
-                      value={editableJobTitle}
-                      onChange={(e) => setEditableJobTitle(e.target.value)}
-                      className="w-full text-xl font-bold text-[#1c2e4a] bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg px-3 py-1 mb-2 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                    />
-                  ) : (
-                    <h2 className="text-xl font-bold text-[#1c2e4a]">{editableJobTitle}</h2>
-                  )}
-                  {isEditMode ? (
-                    <select
-                      value={editableJobRole}
-                      onChange={(e) => setEditableJobRole(e.target.value)}
-                      className="text-sm text-gray-600 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg px-2 py-1 w-full transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                    >
-                      <option value="Full-time">Full-time</option>
-                      <option value="Part-time">Part-time</option>
-                      <option value="Contract">Contract</option>
-                      <option value="Internship">Internship</option>
-                      <option value="Freelance">Freelance</option>
-                    </select>
-                  ) : (
-                    <p className="text-sm text-gray-600">Role: {editableJobRole}</p>
-                  )}
-                </div>
+                <button type="button" onClick={closeModal} aria-label="Close" className="text-white/90 hover:text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
               </div>
-              
+              <div className="border-t border-white/6" />
               {/* Page indicator - only show when we have multiple pages */}
               {modalPage > 0 && (
-                <div className="flex items-center mt-4">
-                  <div className={`h-1 w-6 rounded-full mr-1 ${modalPage === 1 ? 'bg-[#0F387A]' : 'bg-gray-300'}`}></div>
-                  <div className={`h-1 w-6 rounded-full ${modalPage === 2 ? 'bg-[#0F387A]' : 'bg-gray-300'}`}></div>
+                <div className="flex items-center mt-2 px-4">
+                  <div className={`h-1 w-6 rounded-full mr-1 ${modalPage === 1 ? 'bg-[#0F387A]' : 'bg-white/20'}`}></div>
+                  <div className={`h-1 w-6 rounded-full ${modalPage === 2 ? 'bg-[#0F387A]' : 'bg-white/20'}`}></div>
                 </div>
               )}
-            </div>
-            
-            {/* Scrollable content area - with auto vertical centering */}
-            <div id="modalScrollContainer" className="px-8 flex-1 overflow-y-auto scrollbar-hide flex flex-col relative pb-0">
-              
-              {modalPage === 1 ? (
-                <div className="my-auto py-6 pb-8">
-                  <h3 className="text-md font-medium text-[#1c2e4a] mb-2">Job Description</h3>
-                  {isEditMode ? (
-                    <textarea
-                      value={jobDescription}
-                      onChange={(e) => setJobDescription(e.target.value)}
-                      className="w-full p-3 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 mb-4 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30 h-24"
-                    />
-                  ) : (
-                    <p className="text-sm text-gray-600 mb-4">
-                      {jobDescription}
-                    </p>
-                  )}
-                  
-                  <h3 className="text-md font-medium text-[#1c2e4a] mb-2">Requirements</h3>
-                  {isEditMode ? (
-                    <textarea
-                      value={jobRequirements}
-                      onChange={(e) => setJobRequirements(e.target.value)}
-                      className="w-full p-3 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 mb-6 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30 h-24"
-                    />
-                  ) : (
-                    <ul className="list-disc pl-5 mb-6">
-                      {jobRequirements.split('\n').map((req, index) => (
-                        <li key={index} className="text-sm text-gray-600 mb-1">
-                          {req}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ) : (
-                <div className="my-auto py-6 pb-8">
-                  <h3 className="text-md font-medium text-[#1c2e4a] mb-5">Job Details</h3>
-                  
-                  {/* 2x2 Grid Layout for Form Fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 mb-6">
-                    {/* Stipend Radio Buttons */}
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-[#1c2e4a]">
-                        Stipend Available
-                      </label>
-                      <div className="flex space-x-4">
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            className="form-radio text-[#0F387A] h-4 w-4"
-                            name="stipend"
-                            value="yes"
-                            checked={stipend === 'yes'}
-                            onChange={() => setStipend('yes')}
-                          />
-                          <span className="ml-2 text-sm text-gray-600">Yes</span>
-                        </label>
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            className="form-radio text-[#0F387A] h-4 w-4"
-                            name="stipend"
-                            value="no"
-                            checked={stipend === 'no'}
-                            onChange={() => setStipend('no')}
-                          />
-                          <span className="ml-2 text-sm text-gray-600">No</span>
-                        </label>
-                      </div>
-                    </div>
-                    
-                    {/* Number of Openings */}
-                    <div className="space-y-2">
-                      <label htmlFor="openings" className="block text-sm font-medium text-[#1c2e4a]">
-                        Number of Openings
-                      </label>
-                      <input
-                        type="number"
-                        id="openings"
-                        min="1"
-                        placeholder="e.g., 5"
-                        className="w-full p-2 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                        value={openings}
-                        onChange={(e) => setOpenings(e.target.value)}
-                      />
-                    </div>
-                    
-                    {/* Pay Range */}
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-[#1c2e4a]">
-                        Pay Range (₹)
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          className="w-full p-2 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                          placeholder="From"
-                          value={payRangeFrom}
-                          onChange={(e) => setPayRangeFrom(e.target.value)}
-                        />
-                        <span className="text-gray-500">to</span>
-                        <input
-                          type="number"
-                          className="w-full p-2 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                          placeholder="To"
-                          value={payRangeTo}
-                          onChange={(e) => setPayRangeTo(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Application Deadline */}
-                    <div className="space-y-2">
-                      <label htmlFor="deadline" className="block text-sm font-medium text-[#1c2e4a]">
-                        Application Deadline
-                      </label>
-                      <div className="flex space-x-2">
-                        {/* Custom Styled Month Dropdown */}
-                        <div className="relative w-1/3">
-                          <select 
-                            className="w-full appearance-none p-2 pr-8 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                            value={applicationDeadline.month}
-                            onChange={(e) => setApplicationDeadline({...applicationDeadline, month: e.target.value})}
-                          >
-                            <option value="">Month</option>
-                            <option value="01">Jan</option>
-                            <option value="02">Feb</option>
-                            <option value="03">Mar</option>
-                            <option value="04">Apr</option>
-                            <option value="05">May</option>
-                            <option value="06">Jun</option>
-                            <option value="07">Jul</option>
-                            <option value="08">Aug</option>
-                            <option value="09">Sep</option>
-                            <option value="10">Oct</option>
-                            <option value="11">Nov</option>
-                            <option value="12">Dec</option>
-                          </select>
-                          {/* Custom dropdown arrow */}
-                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#0F387A]">
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                          </div>
-                        </div>
-                        
-                        {/* Day Text Box */}
-                        <input
-                          type="text"
-                          placeholder="DD"
-                          className="w-1/4 p-2 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                          value={applicationDeadline.day}
-                          onChange={(e) => {
-                            // Allow only numbers and limit to 2 digits
-                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
-                            // Ensure day is between 1-31
-                            if (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 31)) {
-                              setApplicationDeadline({...applicationDeadline, day: value});
-                            }
-                          }}
-                        />
-                        
-                        {/* Year Text Box */}
-                        <input
-                          type="text"
-                          placeholder="YYYY"
-                          className="w-1/3 p-2 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                          value={applicationDeadline.year}
-                          onChange={(e) => {
-                            // Allow only numbers and limit to 4 digits
-                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
-                            setApplicationDeadline({...applicationDeadline, year: value});
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Action buttons - Fixed at bottom */}
-            <div className="flex justify-between space-x-3 p-5 bg-gradient-to-br from-[#0F387A]/20 to-[#126F7D]/20 flex-shrink-0">
-              {modalPage === 1 ? (
-                <>
-                  <div></div> {/* Empty div for spacing */}
-                  <div className="flex items-center space-x-3">
+              {/* Scrollable content area */}
+              <div id="modalScrollContainer" className="flex-1 overflow-y-auto px-4 py-4 flex flex-col relative scrollbar-hide">
+                {modalPage === 1 ? (
+                  <div className="my-auto py-6 pb-8">
+                    <h3 className="text-md font-medium text-white mb-2">Job Description</h3>
                     {isEditMode ? (
-                      <>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={generateAll}
-                            className={`px-4 py-2 bg-[#0F387A] text-white rounded-full hover:bg-[#0F387A]/90 transition-all flex items-center ${(isGeneratingJD || isGeneratingRequirements) ? 'opacity-60 cursor-wait' : ''}`}
-                            disabled={isGeneratingJD || isGeneratingRequirements}
-                          >
-                            {(isGeneratingJD || isGeneratingRequirements) ? 'Generating…' : 'Generate'}
-                          </button>
-                        </div>
-                        <button 
-                          onClick={saveChanges}
-                          className="px-5 py-2.5 border border-[#0F387A] text-[#0F387A] rounded-full hover:bg-[#0F387A]/5 transition-all flex items-center"
-                        >
-                          Save Changes
-                        </button>
-                      </>
+                      <textarea
+                        value={jobDescription}
+                        onChange={(e) => setJobDescription(e.target.value)}
+                        className="w-full p-3 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white mb-4 focus:outline-none focus:border-[#436571] focus:border-1 h-24"
+                      />
                     ) : (
-                      <button 
-                        onClick={toggleEditMode}
-                        className="px-5 py-2.5 border border-[#0F387A] text-[#0F387A] rounded-full hover:bg-[#0F387A]/5 transition-all flex items-center"
-                      >
-                        Make Changes
-                      </button>
+                      <p className="text-sm text-white/80 mb-4">
+                        {jobDescription}
+                      </p>
                     )}
-                    <button 
-                      onClick={goToNextPage}
-                      className={`p-3 ${isEditMode ? 'bg-[#0F387A]/50 cursor-not-allowed' : 'bg-[#0F387A] hover:bg-[#0F387A]/90 cursor-pointer'} text-white rounded-full transition-all`}
-                      disabled={isEditMode}
-                    >
-                      <ChevronRight className="h-6 w-6" />
-                    </button>
+                    <h3 className="text-md font-medium text-white mb-2">Requirements</h3>
+                    {isEditMode ? (
+                      <textarea
+                        value={jobRequirements}
+                        onChange={(e) => setJobRequirements(e.target.value)}
+                        className="w-full p-3 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white mb-6 focus:outline-none focus:border-[#436571] focus:border-1 h-24"
+                      />
+                    ) : (
+                      <ul className="list-disc pl-5 mb-6">
+                        {jobRequirements.split('\n').map((req, index) => (
+                          <li key={index} className="text-sm text-white/80 mb-1">
+                            {req}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
-                </>
-              ) : (
-                <>
-                  <button 
-                    onClick={() => setModalPage(1)}
-                    className="px-5 py-2.5 border border-[#0F387A] text-[#0F387A] rounded-full hover:bg-[#0F387A]/5 transition-all flex items-center"
-                  >
-                    Back
-                  </button>
-                  <div className="flex items-center space-x-2">
-                    <button 
-                      onClick={postJob}
-                      className="px-6 py-2.5 bg-[#0F387A] text-white rounded-full hover:bg-[#0F387A]/90 transition-all flex items-center"
-                    >
-                      {selectedJob && selectedJob.id ? 'Update Job' : 'Post Job'}
-                    </button>
-                    <button
-                      onClick={downloadJobDetails}
-                      className="p-3 bg-[#0F387A] text-white rounded-full hover:bg-[#0F387A]/90 transition-all flex items-center justify-center"
-                      title="Download Job Description"
-                    >
-                      <Download className="h-5.5 w-5.5" />
-                    </button>
+                ) : (
+                  <div className="my-auto py-6 pb-8">
+                    <h3 className="text-md font-medium text-white mb-5">Job Details</h3>
+                    {/* 2x2 Grid Layout for Form Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 mb-6">
+                      {/* Stipend Radio Buttons */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-white">
+                          Stipend Available
+                        </label>
+                        <div className="flex space-x-4">
+                          <label className="inline-flex items-center">
+                            <input
+                              type="radio"
+                              className="form-radio text-[#0F387A] h-4 w-4"
+                              name="stipend"
+                              value="yes"
+                              checked={stipend === 'yes'}
+                              onChange={() => setStipend('yes')}
+                            />
+                            <span className="ml-2 text-sm text-white/80">Yes</span>
+                          </label>
+                          <label className="inline-flex items-center">
+                            <input
+                              type="radio"
+                              className="form-radio text-[#0F387A] h-4 w-4"
+                              name="stipend"
+                              value="no"
+                              checked={stipend === 'no'}
+                              onChange={() => setStipend('no')}
+                            />
+                            <span className="ml-2 text-sm text-white/80">No</span>
+                          </label>
+                        </div>
+                      </div>
+                      {/* Number of Openings */}
+                      <div className="space-y-2">
+                        <label htmlFor="openings" className="block text-sm font-medium text-white">
+                          Number of Openings
+                        </label>
+                        <input
+                          type="number"
+                          id="openings"
+                          min="1"
+                          placeholder="e.g., 5"
+                          className="w-full p-2 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                          value={openings}
+                          onChange={(e) => setOpenings(e.target.value)}
+                        />
+                      </div>
+                      {/* Pay Range */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-white">
+                          Pay Range (₹)
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            className="w-full p-2 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                            placeholder="From"
+                            value={payRangeFrom}
+                            onChange={(e) => setPayRangeFrom(e.target.value)}
+                          />
+                          <span className="text-white/60">to</span>
+                          <input
+                            type="number"
+                            className="w-full p-2 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                            placeholder="To"
+                            value={payRangeTo}
+                            onChange={(e) => setPayRangeTo(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      {/* Application Deadline */}
+                      <div className="space-y-2">
+                        <label htmlFor="deadline" className="block text-sm font-medium text-white">
+                          Application Deadline
+                        </label>
+                        <div className="flex space-x-2">
+                          {/* Custom Styled Month Dropdown */}
+                          <div className="relative w-1/3">
+                            <select 
+                              className="w-full appearance-none p-2 pr-8 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                              value={applicationDeadline.month}
+                              onChange={(e) => setApplicationDeadline({...applicationDeadline, month: e.target.value})}
+                            >
+                              <option value="">Month</option>
+                              <option value="01">Jan</option>
+                              <option value="02">Feb</option>
+                              <option value="03">Mar</option>
+                              <option value="04">Apr</option>
+                              <option value="05">May</option>
+                              <option value="06">Jun</option>
+                              <option value="07">Jul</option>
+                              <option value="08">Aug</option>
+                              <option value="09">Sep</option>
+                              <option value="10">Oct</option>
+                              <option value="11">Nov</option>
+                              <option value="12">Dec</option>
+                            </select>
+                            {/* Custom dropdown arrow */}
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#0F387A]">
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                              </svg>
+                            </div>
+                          </div>
+                          {/* Day Text Box */}
+                          <input
+                            type="text"
+                            placeholder="DD"
+                            className="w-1/4 p-2 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                            value={applicationDeadline.day}
+                            onChange={(e) => {
+                              // Allow only numbers and limit to 2 digits
+                              const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+                              // Ensure day is between 1-31
+                              if (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 31)) {
+                                setApplicationDeadline({...applicationDeadline, day: value});
+                              }
+                            }}
+                          />
+                          {/* Year Text Box */}
+                          <input
+                            type="text"
+                            placeholder="YYYY"
+                            className="w-1/3 p-2 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                            value={applicationDeadline.year}
+                            onChange={(e) => {
+                              // Allow only numbers and limit to 4 digits
+                              const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                              setApplicationDeadline({...applicationDeadline, year: value});
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </>
-              )}
+                )}
+              </div>
+              {/* Action buttons - Fixed at bottom */}
+              <div className="flex justify-between space-x-3 p-5 bg-gradient-to-br from-[#436571]/20 to-[#0F387A]/10 flex-shrink-0">
+                {modalPage === 1 ? (
+                  <>
+                    <div></div>
+                    <div className="flex items-center space-x-3">
+                      {isEditMode ? (
+                        <>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={generateAll}
+                              className={`px-4 py-2 bg-[#436571]/70 text-white rounded-3xl hover:brightness-95 transition flex items-center ${(isGeneratingJD || isGeneratingRequirements) ? 'opacity-60 cursor-wait' : ''}`}
+                              disabled={isGeneratingJD || isGeneratingRequirements}
+                            >
+                              {(isGeneratingJD || isGeneratingRequirements) ? 'Generating…' : 'Generate'}
+                            </button>
+                          </div>
+                          <button 
+                            onClick={saveChanges}
+                            className="px-5 py-2.5 border border-white/20 text-white rounded-3xl hover:bg-[#436571]/10 transition flex items-center"
+                          >
+                            Save Changes
+                          </button>
+                        </>
+                      ) : (
+                        <button 
+                          onClick={toggleEditMode}
+                          className="px-5 py-2.5 border border-white/20 text-white rounded-3xl hover:bg-[#436571]/10 transition flex items-center"
+                        >
+                          Make Changes
+                        </button>
+                      )}
+                      <button 
+                        onClick={goToNextPage}
+                        className={`p-3 ${isEditMode ? 'bg-[#436571]/40 cursor-not-allowed' : 'bg-[#436571]/70 hover:brightness-95 cursor-pointer'} text-white rounded-3xl transition`}
+                        disabled={isEditMode}
+                      >
+                        <ChevronRight className="h-6 w-6" />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => setModalPage(1)}
+                      className="px-5 py-2.5 border border-white/20 text-white rounded-3xl hover:bg-[#436571]/10 transition flex items-center"
+                    >
+                      Back
+                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={postJob}
+                        className="px-6 py-2.5 bg-[#436571]/70 text-white rounded-3xl hover:brightness-95 transition flex items-center"
+                      >
+                        {selectedJob && selectedJob.id ? 'Update Job' : 'Post Job'}
+                      </button>
+                      <button
+                        onClick={downloadJobDetails}
+                        className="p-3 bg-[#436571]/70 text-white rounded-3xl hover:brightness-95 transition flex items-center justify-center"
+                        title="Download Job Description"
+                      >
+                        <Download className="h-5.5 w-5.5" />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1356,335 +1369,317 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
       
       {/* New Job Modal */}
       {isNewJobModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Overlay */}
-          <div 
-            className="absolute inset-0 bg-black/20 backdrop-blur-sm" 
-            onClick={closeNewJobModal}
-          ></div>
-          
+          <div className="absolute inset-0 bg-black/45 backdrop-blur-xs" onClick={closeNewJobModal} />
           {/* Modal Content */}
-          <div className="bg-white/50 backdrop-blur-md rounded-2xl shadow-xl w-full max-w-2xl h-[80vh] relative overflow-hidden animate-fadeIn flex flex-col">
-            {/* Close button */}
-            <button 
-              onClick={closeNewJobModal}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
-            
-            {/* Header with title - Fixed at top */}
-            <div className="px-8 pt-8 pb-4 flex-shrink-0">
-              <div className="flex items-center">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-[#0F387A]/10 flex items-center justify-center mr-4">
-                  <Plus className="h-7 w-7 text-[#0F387A]" />
+          <div className="relative w-full max-w-3xl rounded-2xl p-1" aria-modal="true" role="dialog" aria-label="Add New Job">
+            <div className="w-full bg-[linear-gradient(rgba(67,101,113,0.08),rgba(54,73,72,0.06))] backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl max-h-[80vh] flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-14 h-14 rounded-full overflow-hidden bg-[#0F387A]/10 flex items-center justify-center mr-4">
+                    <Plus className="h-7 w-7 text-[#0F387A]" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Add New Job</h2>
+                    <p className="text-sm text-white/70">Fill in the details to create a new job posting</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-[#1c2e4a]">Add New Job</h2>
-                  <p className="text-sm text-gray-600">Fill in the details to create a new job posting</p>
-                </div>
+                <button type="button" onClick={closeNewJobModal} aria-label="Close" className="text-white/90 hover:text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
               </div>
-              
+              <div className="border-t border-white/6" />
               {/* Page indicator */}
-              <div className="flex items-center mt-4">
-                <div className={`h-1 w-6 rounded-full mr-1 ${newJobModalPage === 1 ? 'bg-[#0F387A]' : 'bg-gray-300'}`}></div>
-                <div className={`h-1 w-6 rounded-full ${newJobModalPage === 2 ? 'bg-[#0F387A]' : 'bg-gray-300'}`}></div>
+              <div className="flex items-center mt-2 px-4">
+                <div className={`h-1 w-6 rounded-full mr-1 ${newJobModalPage === 1 ? 'bg-[#0F387A]' : 'bg-white/20'}`}></div>
+                <div className={`h-1 w-6 rounded-full ${newJobModalPage === 2 ? 'bg-[#0F387A]' : 'bg-white/20'}`}></div>
               </div>
-            </div>
-            
-            {/* Scrollable content area */}
-            <div id="newJobModalScrollContainer" className="px-8 flex-1 overflow-y-auto scrollbar-hide flex flex-col relative pb-0">
-              
-              {newJobModalPage === 1 ? (
-                <div className="my-auto py-6 pb-8">
-                  {/* Job Title */}
-                  <div className="mb-4">
-                    <label htmlFor="jobTitle" className="block text-sm font-medium text-[#1c2e4a] mb-2">
-                      Job Title*
-                    </label>
-                    <input
-                      type="text"
-                      id="jobTitle"
-                      placeholder="e.g., Senior UI Developer"
-                      className="w-full p-3 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                      value={newJobForm.title}
-                      onChange={(e) => handleNewJobFormChange('title', e.target.value)}
-                    />
-                  </div>
-                  
-                  {/* Company Name */}
-                  <div className="mb-4">
-                    <label htmlFor="company" className="block text-sm font-medium text-[#1c2e4a] mb-2">
-                      Company Name
-                    </label>
-                    <input
-                      type="text"
-                      id="company"
-                      className="w-full p-3 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                      value={newJobForm.company}
-                      onChange={(e) => handleNewJobFormChange('company', e.target.value)}
-                    />
-                  </div>
-                  
-                  {/* Job Type and Location - 2 columns */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    {/* Job Type */}
-                    <div>
-                      <label htmlFor="jobType" className="block text-sm font-medium text-[#1c2e4a] mb-2">
-                        Job Type*
-                      </label>
-                      <select
-                        id="jobType"
-                        className="w-full p-3 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                        value={newJobForm.type}
-                        onChange={(e) => {
-                          handleNewJobFormChange('type', e.target.value);
-                          // Update compensation type based on job type
-                          if (e.target.value === 'Internship' || e.target.value === 'Part time') {
-                            handleNewJobFormChange('compensationType', 'stipend');
-                          } else {
-                            handleNewJobFormChange('compensationType', 'salary');
-                          }
-                        }}
-                      >
-                        <option value="Full time">Full time</option>
-                        <option value="Part time">Part time</option>
-                        <option value="Internship">Internship</option>
-                        <option value="Contract">Contract</option>
-                        <option value="Freelance">Freelance</option>
-                      </select>
-                    </div>
-                    
-                    {/* Job Location */}
-                    <div>
-                      <label htmlFor="jobLocation" className="block text-sm font-medium text-[#1c2e4a] mb-2">
-                        Job Location*
+              {/* Scrollable content area */}
+              <div id="newJobModalScrollContainer" className="flex-1 overflow-y-auto px-4 py-4 flex flex-col relative scrollbar-hide">
+                {newJobModalPage === 1 ? (
+                  <div className="my-auto py-6 pb-8">
+                    {/* Job Title */}
+                    <div className="mb-4">
+                      <label htmlFor="jobTitle" className="block text-sm font-medium text-white mb-2">
+                        Job Title*
                       </label>
                       <input
                         type="text"
-                        id="jobLocation"
-                        placeholder="e.g., Bangalore, Remote, Hybrid"
-                        className="w-full p-3 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                        value={newJobForm.location}
-                        onChange={(e) => handleNewJobFormChange('location', e.target.value)}
+                        id="jobTitle"
+                        placeholder="e.g., Senior UI Developer"
+                        className="w-full p-3 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                        value={newJobForm.title}
+                        onChange={(e) => handleNewJobFormChange('title', e.target.value)}
                       />
                     </div>
-                  </div>
-                  
-                  {/* Job Description */}
-                  <div className="mb-4">
-                    <label htmlFor="jobDescription" className="block text-sm font-medium text-[#1c2e4a] mb-2">
-                      Job Description*
-                    </label>
-                    <textarea
-                      id="jobDescription"
-                      rows={4}
-                      placeholder="Describe the responsibilities, expectations, and details about the role..."
-                      className="w-full p-3 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                      value={newJobForm.description}
-                      onChange={(e) => handleNewJobFormChange('description', e.target.value)}
-                    />
-                  </div>
-                  
-                  {/* Requirements */}
-                  <div className="mb-4">
-                    <label htmlFor="requirements" className="block text-sm font-medium text-[#1c2e4a] mb-2">
-                      Requirements*
-                    </label>
-                    <textarea
-                      id="requirements"
-                      rows={4}
-                      placeholder="List the skills, qualifications, and experience required..."
-                      className="w-full p-3 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                      value={newJobForm.requirements}
-                      onChange={(e) => handleNewJobFormChange('requirements', e.target.value)}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="my-auto py-6 pb-8">
-                  <h3 className="text-md font-medium text-[#1c2e4a] mb-5">Job Details</h3>
-                  
-                  {/* 2x2 Grid Layout for Form Fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 mb-6">
-                    {/* Compensation Type */}
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-[#1c2e4a]">
-                        {newJobForm.type === 'Full time' || newJobForm.type === 'Contract' ? 'Salary' : 'Stipend'} Available
-                      </label>
-                      <div className="flex space-x-4">
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            className="form-radio text-[#0F387A] h-4 w-4"
-                            name="compensationType"
-                            value="yes"
-                            checked={newJobForm.compensationType === 'yes'}
-                            onChange={() => handleNewJobFormChange('compensationType', 'yes')}
-                          />
-                          <span className="ml-2 text-sm text-gray-600">Yes</span>
-                        </label>
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            className="form-radio text-[#0F387A] h-4 w-4"
-                            name="compensationType"
-                            value="no"
-                            checked={newJobForm.compensationType === 'no'}
-                            onChange={() => handleNewJobFormChange('compensationType', 'no')}
-                          />
-                          <span className="ml-2 text-sm text-gray-600">No</span>
-                        </label>
-                      </div>
-                    </div>
-                    
-                    {/* Number of Openings */}
-                    <div className="space-y-2">
-                      <label htmlFor="openings" className="block text-sm font-medium text-[#1c2e4a]">
-                        Number of Openings*
+                    {/* Company Name */}
+                    <div className="mb-4">
+                      <label htmlFor="company" className="block text-sm font-medium text-white mb-2">
+                        Company Name
                       </label>
                       <input
-                        type="number"
-                        id="openings"
-                        min="1"
-                        placeholder="e.g., 5"
-                        className="w-full p-2 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                        value={newJobForm.openings}
-                        onChange={(e) => handleNewJobFormChange('openings', e.target.value)}
+                        type="text"
+                        id="company"
+                        className="w-full p-3 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                        value={newJobForm.company}
+                        onChange={(e) => handleNewJobFormChange('company', e.target.value)}
                       />
                     </div>
-                    
-                    {/* Pay Range */}
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-[#1c2e4a]">
-                        Pay Range (₹)*
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          className={`w-full p-2 rounded-lg text-sm transition-all duration-300 ${newJobForm.compensationType === 'no' ? 'bg-gray-100 border border-gray-200 text-gray-400' : 'bg-[#0F387A]/5 border border-[#0F387A]/20 text-gray-600 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30'}`}
-                          placeholder="From"
-                          value={newJobForm.payRangeFrom}
-                          onChange={(e) => handleNewJobFormChange('payRangeFrom', e.target.value)}
-                          disabled={newJobForm.compensationType === 'no'}
-                        />
-                        <span className="text-gray-500">to</span>
-                        <input
-                          type="number"
-                          className={`w-full p-2 rounded-lg text-sm transition-all duration-300 ${newJobForm.compensationType === 'no' ? 'bg-gray-100 border border-gray-200 text-gray-400' : 'bg-[#0F387A]/5 border border-[#0F387A]/20 text-gray-600 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30'}`}
-                          placeholder="To"
-                          value={newJobForm.payRangeTo}
-                          onChange={(e) => handleNewJobFormChange('payRangeTo', e.target.value)}
-                          disabled={newJobForm.compensationType === 'no'}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Application Deadline */}
-                    <div className="space-y-2">
-                      <label htmlFor="deadline" className="block text-sm font-medium text-[#1c2e4a]">
-                        Application Deadline*
-                      </label>
-                      <div className="flex space-x-2">
-                        <select 
-                          className="w-1/3 p-2 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                          value={newJobForm.deadline.month}
-                          onChange={(e) => handleNewJobFormChange('deadline.month', e.target.value)}
-                        >
-                          <option value="">Month</option>
-                          <option value="01">Jan</option>
-                          <option value="02">Feb</option>
-                          <option value="03">Mar</option>
-                          <option value="04">Apr</option>
-                          <option value="05">May</option>
-                          <option value="06">Jun</option>
-                          <option value="07">Jul</option>
-                          <option value="08">Aug</option>
-                          <option value="09">Sep</option>
-                          <option value="10">Oct</option>
-                          <option value="11">Nov</option>
-                          <option value="12">Dec</option>
-                        </select>
-                        
-                        <input
-                          type="text"
-                          placeholder="DD"
-                          className="w-1/4 p-2 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                          value={newJobForm.deadline.day}
-                          onChange={(e) => {
-                            // Allow only numbers and limit to 2 digits
-                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
-                            // Ensure day is between 1-31
-                            if (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 31)) {
-                              handleNewJobFormChange('deadline.day', value);
+                    {/* Job Type and Location - 2 columns */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      {/* Job Type */}
+                      <div>
+                        <label htmlFor="jobType" className="block text-sm font-medium text-white mb-2">
+                          Job Type*
+                        </label>
+                        <Dropdown
+                          value={newJobForm.type}
+                          options={[
+                            { value: 'Full time', label: 'Full time' },
+                            { value: 'Part time', label: 'Part time' },
+                            { value: 'Internship', label: 'Internship' },
+                            { value: 'Contract', label: 'Contract' },
+                            { value: 'Freelance', label: 'Freelance' },
+                          ]}
+                          onChangeAction={(v) => {
+                            handleNewJobFormChange('type', v);
+                            if (v === 'Internship' || v === 'Part time') {
+                              handleNewJobFormChange('compensationType', 'stipend');
+                            } else {
+                              handleNewJobFormChange('compensationType', 'salary');
                             }
                           }}
+                          placeholder="Select job type"
+                          className="w-full"
                         />
-                        
+                      </div>
+                      {/* Job Location */}
+                      <div>
+                        <label htmlFor="jobLocation" className="block text-sm font-medium text-white mb-2">
+                          Job Location*
+                        </label>
                         <input
                           type="text"
-                          placeholder="YYYY"
-                          className="w-1/3 p-2 bg-[#0F387A]/5 border border-[#0F387A]/20 rounded-lg text-sm text-gray-600 transition-all duration-300 focus:outline-none focus:border-[#0F387A]/40 focus:ring-1 focus:ring-[#0F387A]/30"
-                          value={newJobForm.deadline.year}
-                          onChange={(e) => {
-                            // Allow only numbers and limit to 4 digits
-                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
-                            handleNewJobFormChange('deadline.year', value);
-                          }}
+                          id="jobLocation"
+                          placeholder="e.g., Bangalore, Remote, Hybrid"
+                          className="w-full p-3 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                          value={newJobForm.location}
+                          onChange={(e) => handleNewJobFormChange('location', e.target.value)}
                         />
                       </div>
                     </div>
+                    {/* Job Description */}
+                    <div className="mb-4">
+                      <label htmlFor="jobDescription" className="block text-sm font-medium text-white mb-2">
+                        Job Description*
+                      </label>
+                      <textarea
+                        id="jobDescription"
+                        rows={4}
+                        placeholder="Describe the responsibilities, expectations, and details about the role..."
+                        className="w-full p-3 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                        value={newJobForm.description}
+                        onChange={(e) => handleNewJobFormChange('description', e.target.value)}
+                      />
+                    </div>
+                    {/* Requirements */}
+                    <div className="mb-4">
+                      <label htmlFor="requirements" className="block text-sm font-medium text-white mb-2">
+                        Requirements*
+                      </label>
+                      <textarea
+                        id="requirements"
+                        rows={4}
+                        placeholder="List the skills, qualifications, and experience required..."
+                        className="w-full p-3 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                        value={newJobForm.requirements}
+                        onChange={(e) => handleNewJobFormChange('requirements', e.target.value)}
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Action buttons - Fixed at bottom */}
-            <div className="flex justify-between space-x-3 p-5 bg-gradient-to-br from-[#0F387A]/20 to-[#126F7D]/20 flex-shrink-0">
-              {newJobModalPage === 1 ? (
-                <>
-                  <button 
-                    onClick={closeNewJobModal}
-                    className="px-5 py-2.5 border border-[#0F387A] text-[#0F387A] rounded-full hover:bg-[#0F387A]/5 transition-all flex items-center"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    onClick={goToNextNewJobPage}
-                    className="px-6 py-2.5 bg-[#0F387A] text-white rounded-full hover:bg-[#0F387A]/90 transition-all flex items-center"
-                  >
-                    Next
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button 
-                    onClick={() => setNewJobModalPage(1)}
-                    className="px-5 py-2.5 border border-[#0F387A] text-[#0F387A] rounded-full hover:bg-[#0F387A]/5 transition-all flex items-center"
-                  >
-                    Back
-                  </button>
-                  <div className="flex items-center space-x-2">
+                ) : (
+                  <div className="my-auto py-6 pb-8">
+                    <h3 className="text-md font-medium text-white mb-5">Job Details</h3>
+                    {/* 2x2 Grid Layout for Form Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 mb-6">
+                      {/* Compensation Type */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-white">
+                          {newJobForm.type === 'Full time' || newJobForm.type === 'Contract' ? 'Salary' : 'Stipend'} Available
+                        </label>
+                        <div className="flex space-x-4">
+                          <label className="inline-flex items-center">
+                            <input
+                              type="radio"
+                              className="form-radio text-[#0F387A] h-4 w-4"
+                              name="compensationType"
+                              value="yes"
+                              checked={newJobForm.compensationType === 'yes'}
+                              onChange={() => handleNewJobFormChange('compensationType', 'yes')}
+                            />
+                            <span className="ml-2 text-sm text-white/80">Yes</span>
+                          </label>
+                          <label className="inline-flex items-center">
+                            <input
+                              type="radio"
+                              className="form-radio text-[#0F387A] h-4 w-4"
+                              name="compensationType"
+                              value="no"
+                              checked={newJobForm.compensationType === 'no'}
+                              onChange={() => handleNewJobFormChange('compensationType', 'no')}
+                            />
+                            <span className="ml-2 text-sm text-white/80">No</span>
+                          </label>
+                        </div>
+                      </div>
+                      {/* Number of Openings */}
+                      <div className="space-y-2">
+                        <label htmlFor="openings" className="block text-sm font-medium text-white">
+                          Number of Openings*
+                        </label>
+                        <input
+                          type="number"
+                          id="openings"
+                          min="1"
+                          placeholder="e.g., 5"
+                          className="w-full p-2 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                          value={newJobForm.openings}
+                          onChange={(e) => handleNewJobFormChange('openings', e.target.value)}
+                        />
+                      </div>
+                      {/* Pay Range */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-white">
+                          Pay Range (₹)*
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            className={`w-full p-2 rounded-md text-sm transition-all duration-300 ${newJobForm.compensationType === 'no' ? 'bg-gray-100 border border-gray-200 text-gray-400' : 'bg-[#436571]/10 border border-white/10 text-white focus:outline-none focus:border-[#436571] focus:border-1'}`}
+                            placeholder="From"
+                            value={newJobForm.payRangeFrom}
+                            onChange={(e) => handleNewJobFormChange('payRangeFrom', e.target.value)}
+                            disabled={newJobForm.compensationType === 'no'}
+                          />
+                          <span className="text-white/60">to</span>
+                          <input
+                            type="number"
+                            className={`w-full p-2 rounded-md text-sm transition-all duration-300 ${newJobForm.compensationType === 'no' ? 'bg-gray-100 border border-gray-200 text-gray-400' : 'bg-[#436571]/10 border border-white/10 text-white focus:outline-none focus:border-[#436571] focus:border-1'}`}
+                            placeholder="To"
+                            value={newJobForm.payRangeTo}
+                            onChange={(e) => handleNewJobFormChange('payRangeTo', e.target.value)}
+                            disabled={newJobForm.compensationType === 'no'}
+                          />
+                        </div>
+                      </div>
+                      {/* Application Deadline */}
+                      <div className="space-y-2">
+                        <label htmlFor="deadline" className="block text-sm font-medium text-white">
+                          Application Deadline*
+                        </label>
+                        <div className="flex space-x-2">
+                          <Dropdown
+                            value={newJobForm.deadline.month}
+                            options={[
+                              { value: '', label: 'Month' },
+                              { value: '01', label: 'Jan' },
+                              { value: '02', label: 'Feb' },
+                              { value: '03', label: 'Mar' },
+                              { value: '04', label: 'Apr' },
+                              { value: '05', label: 'May' },
+                              { value: '06', label: 'Jun' },
+                              { value: '07', label: 'Jul' },
+                              { value: '08', label: 'Aug' },
+                              { value: '09', label: 'Sep' },
+                              { value: '10', label: 'Oct' },
+                              { value: '11', label: 'Nov' },
+                              { value: '12', label: 'Dec' },
+                            ]}
+                            onChangeAction={(v) => handleNewJobFormChange('deadline.month', v)}
+                            placeholder="Month"
+                            className="w-1/3"
+                          />
+                          <input
+                            type="text"
+                            placeholder="DD"
+                            className="w-1/4 p-2 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                            value={newJobForm.deadline.day}
+                            onChange={(e) => {
+                              // Allow only numbers and limit to 2 digits
+                              const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+                              // Ensure day is between 1-31
+                              if (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 31)) {
+                                handleNewJobFormChange('deadline.day', value);
+                              }
+                            }}
+                          />
+                          <input
+                            type="text"
+                            placeholder="YYYY"
+                            className="w-1/3 p-2 bg-[#436571]/10 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-[#436571] focus:border-1"
+                            value={newJobForm.deadline.year}
+                            onChange={(e) => {
+                              // Allow only numbers and limit to 4 digits
+                              const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                              handleNewJobFormChange('deadline.year', value);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              {/* Action buttons - Fixed at bottom */}
+              <div className="flex justify-between space-x-3 p-5 bg-gradient-to-br from-[#436571]/20 to-[#0F387A]/10 flex-shrink-0">
+                {newJobModalPage === 1 ? (
+                  <>
                     <button 
-                      onClick={postNewJob}
-                      className="px-6 py-2.5 bg-[#0F387A] text-white rounded-full hover:bg-[#0F387A]/90 transition-all flex items-center"
+                      onClick={closeNewJobModal}
+                      className="px-5 py-2.5 border border-white/20 text-white rounded-3xl hover:bg-[#436571]/10 transition flex items-center"
                     >
-                      Post Job
+                      Cancel
                     </button>
-                    <button
-                      onClick={downloadJobJD}
-                      className="p-3 bg-[#0F387A] text-white rounded-full hover:bg-[#0F387A]/90 transition-all flex items-center justify-center"
-                      title="Download Job Description"
+                    <button 
+                      onClick={goToNextNewJobPage}
+                      className="px-6 py-2.5 bg-[#436571]/70 text-white rounded-3xl hover:brightness-95 transition flex items-center"
                     >
-                      <Download className="h-5.5 w-5.5" />
+                      Next
                     </button>
-                  </div>
-                </>
-              )}
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => setNewJobModalPage(1)}
+                      className="px-5 py-2.5 border border-white/20 text-white rounded-3xl hover:bg-[#436571]/10 transition flex items-center"
+                    >
+                      Back
+                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={postNewJob}
+                        className="px-6 py-2.5 bg-[#436571]/70 text-white rounded-3xl hover:brightness-95 transition flex items-center"
+                      >
+                        Post Job
+                      </button>
+                      <button
+                        onClick={downloadJobJD}
+                        className="p-3 bg-[#436571]/70 text-white rounded-3xl hover:brightness-95 transition flex items-center justify-center"
+                        title="Download Job Description"
+                      >
+                        <Download className="h-5.5 w-5.5" />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
       )}
-    </main>
+      </main>
+    </div>
   );
 }

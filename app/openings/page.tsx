@@ -40,71 +40,63 @@ const openings = [
 
 export default function OpeningsPage() {
 	return (
-		<main className="min-h-screen bg-white">
-			<div className="bg-gradient-to-br from-[#0F387A]/25 to-[#126F7D]/25 w-full h-[100vh]">
+		<main className="min-h-screen bg-black text-white">
+			<div className="bg-gradient-to-br from-[#0F387A]/18 to-[#126F7D]/18 w-full min-h-screen">
 				<Nav />
 				<div className="max-w-7xl mx-auto px-4 py-4">
-					<h1 className="text-2xl sm:text-3xl font-bold text-[#1c2e4a] mb-6">
+					<h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 drop-shadow">
 						Current Job Openings
 					</h1>
-					<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-						{openings.map((job) => (
-							<div
-								key={job.id}
-								className="bg-white rounded-xl shadow p-4 sm:p-6 flex flex-col space-y-3 border border-[#0F387A]/10 relative transition-transform duration-200 hover:-translate-y-1 hover:shadow-xl group"
-							>
-								<div className="flex items-center justify-between flex-wrap gap-2 relative">
-									<div>
-										<h2 className="text-base sm:text-lg font-semibold text-[#1c2e4a]">
-											{job.title}
-										</h2>
-										<p className="text-xs sm:text-sm text-gray-500">
-											{job.company}
-										</p>
-									</div>
-									<span className="absolute top-0 right-0 text-xs sm:text-sm text-gray-400 font-semibold mt-2 mr-2 select-none">
-										{job.type}
-									</span>
-								</div>
-								<div className="flex flex-col gap-1 mt-2">
-									<div className="flex items-center text-xs sm:text-sm text-gray-500 space-x-2 sm:space-x-4">
-										<span className="flex items-center gap-1">
-											<MapPin className="inline h-4 w-4" />
-											{job.location}
-										</span>
-										<span className="flex items-center gap-1">
-											<CalendarDays className="inline h-4 w-4" />
-											{job.posted}
-										</span>
-									</div>
-									<div className="flex items-center justify-between ml-1">
-										<span className="flex items-center gap-1 text-xs sm:text-sm text-gray-500">
-											Number of Candidates:{" "}
-											<span className="font-semibold text-[#126F7D] ml-1">
-												{job.candidates}
-											</span>
-										</span>
-										<div className="flex items-center gap-2 sm:gap-3">
-											<Link
-												href={job.jdUrl}
-												className="px-3 py-1.5 sm:px-4 sm:py-2 bg-[#0F387A] text-white rounded-full text-xs sm:text-sm font-medium hover:bg-[#0F387A]/90 transition"
-											>
-												View JD
-											</Link>
-											<a
-												href={job.jdUrl}
-												download
-												className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[#0F387A]/10 hover:bg-[#0F387A]/20 transition shadow border border-[#0F387A]/20"
-												title="Download JD"
-											>
-												<Download className="h-4 w-4 sm:h-5 sm:w-5 text-[#0F387A]" />
-											</a>
+										<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+											{openings.map((job) => (
+												<div
+													key={job.id}
+													className="bg-[linear-gradient(rgba(67,101,113,0.08),rgba(54,73,72,0.06))] backdrop-blur-xl rounded-xl shadow p-4 sm:p-6 flex flex-col border border-white/10 relative transition-transform duration-200 hover:-translate-y-1 hover:shadow-xl group"
+												>
+													{/* Top: Title/Company (left), Type badge (right) */}
+													<div className="flex items-center justify-between mb-3">
+														<div className="flex flex-col">
+															<span className="text-base sm:text-lg font-semibold text-white leading-tight">{job.title}</span>
+															<span className="text-xs sm:text-sm text-blue-200 leading-tight">{job.company}</span>
+														</div>
+														<span className="flex-shrink-0 px-4 py-2 text-xs sm:text-sm font-bold rounded-full transition-all border bg-[#0B283E] text-white border-[#0F387A] shadow text-right self-center">
+															{job.type}
+														</span>
+													</div>
+													{/* Middle: Location + Posted row, then Candidates pill */}
+													<div className="flex items-center gap-3 mb-2">
+														<span className="flex items-center px-2 py-1 rounded-full bg-[#232b3a]/70 text-blue-100 border border-white/10 text-xs sm:text-sm">
+															<MapPin className="inline h-4 w-4 mr-1 text-blue-200" />{job.location}
+														</span>
+														<span className="flex items-center px-2 py-1 rounded-full bg-[#232b3a]/70 text-blue-100 border border-white/10 text-xs sm:text-sm">
+															<CalendarDays className="inline h-4 w-4 mr-1 text-blue-200" />{job.posted}
+														</span>
+													</div>
+													<div className="flex flex-wrap gap-2 mb-3">
+														<span className="px-3 py-1 bg-gradient-to-r from-[#0F387A]/30 to-[#126F7D]/30 text-blue-100 rounded-full text-xs font-medium border border-white/10">
+															{job.candidates} Candidates
+														</span>
+													</div>
+													{/* Bottom: Actions row */}
+													<div className="flex items-center gap-3 mt-auto">
+														<Link
+															href={job.jdUrl}
+															className="flex-1 flex items-center justify-center px-4 py-2 text-xs sm:text-sm font-semibold rounded-full transition-all border bg-[#0B283E]/40 text-blue-200 border-[#28334a] hover:bg-[#232b3a] cursor-pointer"
+														>
+															View JD
+														</Link>
+														<a
+															href={job.jdUrl}
+															download
+															className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0F387A]/10 hover:bg-[#0F387A]/20 transition shadow border border-white/10"
+															title="Download JD"
+														>
+															<Download className="h-5 w-5 text-[#0F387A]" />
+														</a>
+													</div>
+												</div>
+											))}
 										</div>
-									</div>
-								</div>
-							</div>
-						))}
-					</div>
 				</div>
 			</div>
 		</main>
