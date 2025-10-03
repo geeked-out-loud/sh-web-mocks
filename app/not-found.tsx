@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import Aurora from './components/backgrounds/Aurora';
+import Nav from './components/Nav';
 
 export default function NotFound() {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-transparent overflow-hidden">
       {/* Aurora animated background */}
       <div className="fixed inset-0 -z-10 w-full h-full pointer-events-none">
+        <Nav />
         <Aurora
           colorStops={["#275E5A", "#364948", "#031348"]}
           blend={1.0}
