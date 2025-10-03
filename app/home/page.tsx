@@ -2,7 +2,7 @@
 import Aurora from '@/app/components/backgrounds/Aurora';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, User, Calendar, FileText, ChevronRight, CheckCheck, Sparkles, Bot, Trash, Download, Briefcase, Timer, Users, Handshake, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Plus, User, Calendar, FileText, ChevronRight, CheckCheck, Sparkles, Bot, Trash, Download, Briefcase, Timer, Users, Handshake, ArrowUpRight, ArrowDownRight, CircleUser } from 'lucide-react';
 import Dropdown from "../components/ui/Dropdown";
 import Image from 'next/image';
 import Nav from '@/app/components/Nav';
@@ -698,18 +698,10 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
           <div className="px-6 pt-10 flex items-center justify-start">
             <div className="flex items-center">
               <div className="relative h-16 w-16 mr-4">
-                <div className="absolute inset-0 rounded-full bg-[#4ecdc4] flex items-center justify-center">
-                  <svg className="hidden" /> {/* fallback for SSR */}
-                  {/* Lucide CircleUser icon */}
-                  <span className="absolute inset-0 flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-circle-user w-10 h-10 text-white">
-                      <circle cx="12" cy="12" r="10" />
-                      <circle cx="12" cy="10" r="3" />
-                      <path d="M6.8 18.7A6.7 6.7 0 0 1 12 16a6.7 6.7 0 0 1 5.2 2.7" />
-                    </svg>
-                  </span>
+                <div className="absolute inset-0 rounded-full bg-[#0C3B71] flex items-center justify-center">
+                  <CircleUser className="w-10 h-10 text-white" />
                 </div>
-                <div className="absolute inset-0 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                <div className="absolute inset-0 rounded-full overflow-hidden border-white shadow-sm">
                   <Image 
                     src={profileImage} 
                     alt="Profile" 
