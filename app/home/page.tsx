@@ -698,17 +698,20 @@ Application Deadline: ${newJobForm.deadline.day}/${newJobForm.deadline.month}/${
           <div className="px-6 pt-10 flex items-center justify-start">
             <div className="flex items-center">
               <div className="relative h-16 w-16 mr-4">
-                <div className="absolute inset-0 rounded-full bg-[#0C3B71] flex items-center justify-center">
-                  <CircleUser className="w-10 h-10 text-white" />
-                </div>
-                <div className="absolute inset-0 rounded-full overflow-hidden border-white shadow-sm">
-                  <Image 
-                    src={profileImage} 
-                    alt="Profile" 
-                    fill 
-                    className="object-cover"
-                  />
-                </div>
+                {profileImage ? (
+                  <div className="absolute inset-0 rounded-full overflow-hidden border-white shadow-sm">
+                    <Image 
+                      src={profileImage} 
+                      alt="Profile" 
+                      fill 
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 rounded-full bg-[#0C3B71] flex items-center justify-center">
+                    <CircleUser className="w-16 h-16 text-white" />
+                  </div>
+                )}
               </div>
               <div>
                 <p className="text-2xl font-medium text-white drop-shadow">{"Welcome Back, " + (recruiterProfile?.profile?.full_name ?? 'Recruiter')}</p>
